@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Browse Games — Go-Tone Games{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="section-header">
+    <h1>Browse Games</h1>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar" id="filters">
+    <span class="chip active" data-cat="all">All</span>
+    <span class="chip" data-cat="strength">Strength</span>
+    <span class="chip" data-cat="cardio">Cardio</span>
+    <span class="chip" data-cat="flexibility">Flexibility</span>
+    <span class="chip" data-cat="full_body">Full Body</span>
+    <span class="chip" data-cat="free" style="margin-left:auto;">Free</span>
+    <span class="chip" data-cat="premium">Premium</span>
+  </div>
+
+  <!-- Grid -->
+  <div class="card-grid" id="game-grid">
+    <!-- Filled by JS -->
+  </div>
+</div>
+
+<script>
+const grid = document.getElementById('game-grid');
+let currentFilter = 'all';
+
+async function loadGames(category = 'all', premium = null) {
+  const params = new URLSearchParams({ category });
+  if (premium === true) params.set('premium', '1');
+  if (premium === false) params.set('premium', '0');
+
+  const res = await api(`/api/games?${params}`);
+  grid.innerHTML = '';
+
+  res.forEach(game => {
+    const card = document.createElement('div');
+    card.className = 'game-card';
+    card.onclick = () => location.href = `/game/${game.slug}`;
+    card.innerHTML = `
+      <div class="game-card-cover">
+        🎮
+        <span class="badge ${game.is_premium ? 'badge-premium' : 'badge-free'}">
+          ${game.price === 0 ? 'FREE' : '$' + game.price}
+        </span>
+      </div>
+      <div class="game-card-body">
+        <div class="title">${game.title}</div>
+        <div class="desc">${game.description.substring(0, 120)}${game.description.length > 120 ? '...' : ''}</div>
+        <div class="meta">
+          <span class="chip chip-accent">${game.category}</span>
+          <span>${'⭐'.repeat(game.difficulty) || '⭐'}</span>
+          <span>Mode ${game.default_mode}</span>
+          <span>${game.min_weight}-${game.max_weight}lb</span>
+        </div>
+        ${game.price ? `<div class="price-tag">$${game.price}</div>` : '<div class="price-tag" style="color:var(--success);">FREE</div>'}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+loadGames('all');
+
+// Filter clicks
+document.getElementById('filters').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+
+  const cat = chip.dataset.cat;
+  let premium = null;
+  if (cat === 'free') { premium = false; }
+  else if (cat === 'premium') { premium = true; }
+
+  loadGames(cat === 'free' || cat === 'premium' ? 'all' : cat, premium);
+});
+</script>
+{% endblock %}

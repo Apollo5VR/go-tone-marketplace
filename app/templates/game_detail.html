@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}{{ slug }} — Go-Tone Games{% endblock %}
+
+{% block content %}
+<div class="container">
+  <a href="/games" style="color:var(--ink-dim); font-size:0.85rem; margin-bottom:1.5rem; display:inline-block;">← Back to Games</a>
+
+  <div class="game-hero">
+    <div class="game-hero-visual">🎮</div>
+    <div class="game-info" id="game-info">
+      <!-- Loaded via JS -->
+    </div>
+  </div>
+
+  <!-- Reviews -->
+  <div style="margin-top:2.5rem;">
+    <div class="section-header">
+      <h2>Reviews</h2>
+    </div>
+    <div id="reviews-list">
+      <p style="color:var(--ink-dim);">Loading...</p>
+    </div>
+    <!-- Write review -->
+    <div id="review-form" style="display:none; margin-top:1.5rem; max-width:520px;">
+      <div class="form-group">
+        <label>Your Rating</label>
+        <select class="form-input" id="rating">
+          <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+          <option value="4">⭐⭐⭐⭐ (4)</option>
+          <option value="3">⭐⭐⭐ (3)</option>
+          <option value="2">⭐⭐ (2)</option>
+          <option value="1">⭐ (1)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Comment</label>
+        <textarea class="form-input form-textarea" id="comment" placeholder="What did you think?"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="submitReview()">Submit Review</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const slug = "{{ slug }}";
+
+async function loadGame() {
+  const res = await api(`/api/games/${slug}`);
+  const info = document.getElementById('game-info');
+  info.innerHTML = `
+    <div class="title">${res.title}</div>
+    <div class="desc">${res.description}</div>
+    <div class="meta" style="margin-top:0.75rem;">
+      <span class="chip chip-accent">${res.category}</span>
+      <span class="stars">${'⭐'.repeat(res.difficulty) || '⭐'}</span>
+      <span>Mode <b>${res.default_mode}</b></span>
+      <span><b>${res.min_weight}</b>-<b>${res.max_weight}</b> lb</span>
+    </div>
+    <div class="specs">
+      <div class="spec-item"><div class="label">Difficulty</div><div class="val">${'⭐'.repeat(res.difficulty) || '⭐'}</div></div>
+      <div class="spec-item"><div class="label">Weight Range</div><div class="val">${res.min_weight} - ${res.max_weight} lb</div></div>
+      <div class="spec-item"><div class="label">Exercise Mode</div><div class="val">${res.default_mode}</div></div>
+      <div class="spec-item"><div class="label">Rating</div><div class="val">${(res.rating || 0).toFixed(1)} (${res.reviews_count || 0} reviews)</div></div>
+    </div>
+    <div class="game-actions" id="game-actions">
+      <!-- Action buttons loaded by JS -->
+    </div>
+  `;
+
+  const reviewsList = document.getElementById('reviews-list');
+  if (res.reviews && res.reviews.length) {
+    reviewsList.innerHTML = res.reviews.map(r => `
+      <div class="review-card">
+        <div class="author">${r.reviewer_name || 'Anonymous'} <span class="review-stars">${'⭐'.repeat(r.rating) || '⭐'}</span></div>
+        <div class="review-text">${r.comment || 'No comment'}</div>
+        <div class="review-date">${new Date(r.created_at).toLocaleDateString()}</div>
+      </div>
+    `).join('');
+  } else {
+    reviewsList.innerHTML = '<p style="color:var(--ink-dim);">No reviews yet. Be the first!</p>';
+  }
+
+  if (currentToken) {
+    document.getElementById('review-form').style.display = 'block';
+  }
+
+  renderActions(res);
+}
+
+async function renderActions(game) {
+  const actions = document.getElementById('game-actions');
+  const tier = (payload && payload.tier) || 'free';
+
+  let myLibrary = [];
+  try { myLibrary = (await api('/api/library')).owned || []; } catch(e) {}
+  const owned = myLibrary.find(g => g.slug === game.slug);
+
+  if (owned) {
+    actions.innerHTML = `
+      <button class="btn btn-primary" onclick="location.href='/game/${game.slug}/play'">▶ Play Game</button>
+      <span class="chip chip-accent">✓ Owned</span>
+    `;
+  } else if (game.price === 0) {
+    actions.innerHTML = `
+      <button class="btn btn-primary" onclick="addFreeGame('${game.id}', '${game.title}')">✓ Add to Library (Free)</button>
+    `;
+  } else {
+    const canBuy = tier !== 'free' ? 'true' : 'false';
+    actions.innerHTML = `
+      <button class="btn btn-primary" onclick="purchaseGame('${game.id}', '${game.title}', ${canBuy})">Buy for $${game.price}</button>
+      <button class="btn" onclick="addToWishlist('${game.id}', '${game.title}')">♡ Wishlist</button>
+    `;
+  }
+}
+
+async function addFreeGame(gameId, title) {
+  const { owned } = await api('/api/library');
+  const game = owned.find(g => g.id === gameId);
+  if (game) {
+    showToast(`${title} added to library!`);
+    renderActions({ slug: game.slug, price: 0 });
+  }
+}
+
+async function purchaseGame(gameId, title, canBuy) {
+  if (!canBuy) {
+    showToast('Upgrade your subscription to purchase premium games', 'error');
+    return;
+  }
+  const { message } = await api(`/api/library/${slug}/purchase`, { method: 'POST' });
+  showToast(message);
+  renderActions({ slug: game.slug, price: 0 });
+}
+
+async function addToWishlist(gameId, title) {
+  await api('/api/wishlist', { method: 'POST', body: JSON.stringify({ game_id: gameId }) });
+  showToast(`${title} added to wishlist!`);
+}
+
+async function submitReview() {
+  if (!currentToken) { showToast('Login to review', 'error'); return; }
+  const rating = parseInt(document.getElementById('rating').value);
+  const comment = document.getElementById('comment').value;
+  await api(`/api/games/${slug}/reviews`, { method: 'POST', body: JSON.stringify({ rating, comment }) });
+  showToast('Review submitted!');
+  document.getElementById('comment').value = '';
+  loadGame();
+}
+
+loadGame();
+</script>
+{% endblock %}

@@ -1,0 +1,405 @@
+<!-- Base template with shared layout, navbar, and common styles -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Go-Tone Marketplace{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --bg-2: #111827;
+      --bg-3: #1a2035;
+      --ink: #e2e8f0;
+      --ink-dim: #94a3b8;
+      --line: #1e293b;
+      --accent: #22d3ee;
+      --accent-2: #818cf8;
+      --accent-glow: rgba(34, 211, 238, 0.15);
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #f87171;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Navbar ── */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(11, 15, 26, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+      padding: 0 2rem;
+    }
+    .navbar-inner {
+      max-width: 1280px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .navbar-brand {
+      font-weight: 800; font-size: 1.25rem; letter-spacing: -0.03em;
+      color: var(--accent);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .navbar-brand .logo {
+      width: 32px; height: 32px; background: var(--accent);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      color: var(--bg); font-weight: 900; font-size: 0.85rem;
+    }
+    .navbar-links { display: flex; gap: 1.5rem; align-items: center; }
+    .navbar-links a {
+      color: var(--ink-dim); font-weight: 500; font-size: 0.9rem;
+      transition: color 0.15s;
+    }
+    .navbar-links a:hover { color: var(--ink); text-decoration: none; }
+    .navbar-links a.active { color: var(--accent); }
+    .user-badge {
+      background: var(--bg-3); border: 1px solid var(--line);
+      border-radius: 20px; padding: 0.35rem 0.9rem;
+      font-size: 0.82rem; color: var(--ink-dim);
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .user-badge .dot {
+      width: 8px; height: 8px; background: var(--success);
+      border-radius: 50%;
+    }
+
+    /* ── Main container ── */
+    .container { max-width: 1280px; margin: 0 auto; padding: 2rem; }
+    .container-wide { max-width: 1440px; margin: 0 auto; padding: 2rem; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.6rem 1.4rem; border-radius: var(--radius-sm);
+      font-weight: 600; font-size: 0.875rem; cursor: pointer;
+      border: 1px solid var(--line); background: var(--bg-2);
+      color: var(--ink); transition: all 0.15s; font-family: inherit;
+    }
+    .btn:hover { border-color: var(--accent); background: var(--bg-3); }
+    .btn-primary {
+      background: var(--accent); border-color: var(--accent);
+      color: var(--bg);
+    }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-sm { padding: 0.4rem 1rem; font-size: 0.8rem; }
+    .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .btn-danger:hover { filter: brightness(1.15); }
+    .btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Cards ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    .game-card {
+      background: var(--bg-2); border: 1px solid var(--line);
+      border-radius: var(--radius); overflow: hidden;
+      transition: all 0.2s; cursor: pointer;
+    }
+    .game-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(34, 211, 238, 0.1);
+    }
+    .game-card-cover {
+      height: 180px; background: var(--bg-3);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--ink-dim); font-size: 3rem;
+      position: relative;
+    }
+    .game-card-cover .badge {
+      position: absolute; top: 0.75rem; right: 0.75rem;
+      padding: 0.2rem 0.6rem; border-radius: 6px;
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+    }
+    .badge-free { background: var(--success); color: #064e3b; }
+    .badge-premium { background: var(--warning); color: #78350f; }
+    .badge-mode { background: var(--accent-2); color: #1e1b4b; }
+    .game-card-body { padding: 1rem 1.2rem; }
+    .game-card-body .title {
+      font-size: 1.1rem; font-weight: 700; margin-bottom: 0.3rem;
+    }
+    .game-card-body .desc {
+      font-size: 0.82rem; color: var(--ink-dim);
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .game-card-body .meta {
+      display: flex; gap: 0.75rem; margin-top: 0.75rem;
+      font-size: 0.75rem; color: var(--ink-dim);
+    }
+    .game-card-body .price-tag {
+      font-weight: 700; color: var(--accent); font-size: 1rem;
+      margin-top: 0.5rem;
+    }
+    .stars { color: var(--warning); font-size: 0.8rem; }
+
+    /* ── Forms ── */
+    .form-group { margin-bottom: 1rem; }
+    .form-group label {
+      display: block; font-size: 0.82rem; font-weight: 600;
+      color: var(--ink-dim); margin-bottom: 0.35rem;
+    }
+    .form-input {
+      width: 100%; padding: 0.65rem 0.9rem;
+      border: 1px solid var(--line); border-radius: var(--radius-sm);
+      background: var(--bg); color: var(--ink);
+      font-family: inherit; font-size: 0.9rem;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus { outline: none; border-color: var(--accent); }
+    .form-textarea { resize: vertical; min-height: 80px; }
+
+    /* ── Section headers ── */
+    .section-header {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 1.5rem;
+    }
+    .section-header h1 {
+      font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em;
+    }
+    .section-header h2 {
+      font-size: 1.25rem; font-weight: 700;
+    }
+
+    /* ── Tags / Chips ── */
+    .chip {
+      display: inline-block; padding: 0.2rem 0.65rem;
+      border-radius: 99px; font-size: 0.72rem; font-weight: 600;
+      background: var(--bg-3); border: 1px solid var(--line);
+      color: var(--ink-dim);
+    }
+    .chip-accent { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+
+    /* ── Toast notifications ── */
+    .toast {
+      position: fixed; bottom: 2rem; right: 2rem; z-index: 999;
+      padding: 0.85rem 1.4rem; border-radius: var(--radius-sm);
+      font-size: 0.875rem; font-weight: 500;
+      animation: toast-in 0.3s ease;
+      border: 1px solid;
+    }
+    .toast-success { background: #064e3b; border-color: var(--success); color: var(--success); }
+    .toast-error { background: #7f1d1d; border-color: var(--danger); color: var(--danger); }
+    @keyframes toast-in { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* ── Footer ── */
+    .footer {
+      border-top: 1px solid var(--line); margin-top: 3rem;
+      padding: 2rem; text-align: center; color: var(--ink-dim);
+      font-size: 0.8rem;
+    }
+
+    /* ── Reviews ── */
+    .review-card {
+      background: var(--bg-2); border: 1px solid var(--line);
+      border-radius: var(--radius-sm); padding: 1rem 1.2rem;
+      margin-bottom: 0.75rem;
+    }
+    .review-card .author { font-weight: 600; font-size: 0.85rem; }
+    .review-card .review-stars { color: var(--warning); font-size: 0.8rem; }
+    .review-card .review-text { font-size: 0.85rem; color: var(--ink-dim); margin-top: 0.3rem; }
+    .review-card .review-date { font-size: 0.72rem; color: var(--ink-dim); margin-top: 0.4rem; }
+
+    /* ── Leaderboard ── */
+    .lb-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    .lb-table th {
+      text-align: left; padding: 0.6rem 1rem; border-bottom: 2px solid var(--line);
+      color: var(--ink-dim); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .lb-table td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--line); }
+    .lb-table tr:hover td { background: var(--bg-3); }
+    .lb-table .rank { font-weight: 800; color: var(--accent); width: 50px; }
+    .lb-table .score { font-weight: 700; color: var(--success); }
+
+    /* ── Category filter bar ── */
+    .filter-bar {
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .filter-bar .chip { cursor: pointer; transition: all 0.15s; }
+    .filter-bar .chip.active {
+      background: var(--accent-glow); border-color: var(--accent); color: var(--accent);
+    }
+
+    /* ── Auth page ── */
+    .auth-page {
+      min-height: calc(100vh - 64px);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .auth-card {
+      width: 100%; max-width: 420px;
+      background: var(--bg-2); border: 1px solid var(--line);
+      border-radius: var(--radius); padding: 2rem;
+    }
+    .auth-card h1 { text-align: center; margin-bottom: 0.25rem; font-size: 1.5rem; }
+    .auth-card .subtitle { text-align: center; color: var(--ink-dim); font-size: 0.85rem; margin-bottom: 1.5rem; }
+
+    /* ── Game detail ── */
+    .game-hero {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;
+      align-items: start;
+    }
+    .game-hero-visual {
+      height: 320px; background: var(--bg-3); border: 1px solid var(--line);
+      border-radius: var(--radius); display: flex; align-items: center; justify-content: center;
+      font-size: 5rem; color: var(--ink-dim);
+    }
+    .game-info .title { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; }
+    .game-info .desc { color: var(--ink-dim); font-size: 0.95rem; margin-top: 0.5rem; max-width: 520px; }
+    .game-info .specs {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;
+      margin-top: 1.25rem;
+    }
+    .spec-item {
+      background: var(--bg-3); border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem;
+    }
+    .spec-item .label { font-size: 0.7rem; text-transform: uppercase; color: var(--ink-dim); }
+    .spec-item .val { font-size: 1.05rem; font-weight: 700; margin-top: 0.15rem; }
+    .game-actions { margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .player-banner {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(11, 15, 26, 0.95); border-top: 1px solid var(--accent);
+      padding: 0.85rem 2rem; display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(12px);
+    }
+    .player-banner .player-info { font-size: 0.85rem; color: var(--ink-dim); }
+    .player-banner .player-info b { color: var(--ink); }
+    .player-banner .player-actions { display: flex; gap: 0.5rem; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .game-hero { grid-template-columns: 1fr; }
+      .container, .container-wide { padding: 1.25rem; }
+      .navbar-links { gap: 0.75rem; }
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="/" class="navbar-brand">
+        <span class="logo">GT</span>
+        Go-Tone
+      </a>
+      <div class="navbar-links">
+        <a href="/" {% if current_page == 'home' %}class="active"{% endif %}>Store</a>
+        <a href="/games" {% if current_page == 'games' %}class="active"{% endif %}>Games</a>
+        <a href="/library" {% if current_page == 'library' %}class="active"{% endif %}>My Library</a>
+        <a href="/login" id="nav-login">Login</a>
+        <a href="#" id="nav-logout" style="display:none">Logout</a>
+        <span id="nav-user" class="user-badge" style="display:none">
+          <span class="dot"></span>
+          <span id="nav-user-name"></span>
+        </span>
+      </div>
+    </div>
+  </nav>
+
+  <script>
+    // ── Auth state management ──
+    const qs = new URLSearchParams(location.search);
+    const urlToken = qs.get('token');
+    let currentToken = localStorage.getItem('gtoken') || urlToken;
+
+    function setToken(token) {
+      currentToken = token;
+      localStorage.setItem('gtoken', token);
+      updateNav();
+    }
+
+    function updateNav() {
+      const login = document.getElementById('nav-login');
+      const logout = document.getElementById('nav-logout');
+      const badge = document.getElementById('nav-user');
+      const nameEl = document.getElementById('nav-user-name');
+
+      if (currentToken) {
+        login.style.display = 'none';
+        logout.style.display = 'inline';
+        badge.style.display = 'flex';
+        payload = decodeToken(currentToken);
+        const email = payload ? payload.email : 'Guest';
+        nameEl.textContent = email.split('@')[0];
+      } else {
+        login.style.display = 'inline';
+        logout.style.display = 'none';
+        badge.style.display = 'none';
+      }
+    }
+
+    function decodeToken(t) {
+      try {
+        const parts = t.split('.');
+        if (parts.length !== 3) return null;
+        const payload = JSON.parse(atob(parts[1]));
+        if (new Date(payload.exp * 1000) < new Date()) return null;
+        return payload;
+      } catch(e) { return null; }
+    }
+
+    // Logout
+    document.getElementById('nav-logout')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      currentToken = null;
+      localStorage.removeItem('gtoken');
+      updateNav();
+      location.href = '/';
+    });
+
+    // ── API helper ──
+    async function api(path, opts = {}) {
+      const headers = { 'Content-Type': 'application/json' };
+      if (currentToken) headers['Authorization'] = `Bearer ${currentToken}`;
+      const res = await fetch(path, { ...opts, headers: { ...headers, ...opts.headers || {} } });
+      const data = await res.json();
+      if (!res.ok || data.ok === false) {
+        showToast(data.detail || data.message || data.error || 'Error', 'error');
+        throw new Error(data.detail || data.message || data.error || 'API error');
+      }
+      return data;
+    }
+
+    // ── Toast ──
+    function showToast(msg, type = 'success') {
+      const existing = document.querySelector('.toast');
+      if (existing) existing.remove();
+      const el = document.createElement('div');
+      el.className = `toast toast-${type}`;
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }
+
+    // ── Init ──
+    updateNav();
+  </script>
+
+  {% block content %}{% endblock %}
+
+  <footer class="footer">
+    <p>Go-Tone Games &copy; 2025 — Smart resistance training, gamified.</p>
+    <p style="margin-top:0.5rem;"><a href="/static/protocol">BLE Protocol Docs</a> &middot; <a href="https://github.com/Apollo5VR/go-tone-marketplace">GitHub</a></p>
+  </footer>
+</body>
+</html>

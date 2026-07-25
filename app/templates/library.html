@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}My Library — Go-Tone Games{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="section-header">
+    <h1>My Games</h1>
+    <div style="display:flex; gap:0.5rem;">
+      <button class="btn" onclick="loadLibrary()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <div id="library-content">
+    <p style="color:var(--ink-dim);">Loading your library...</p>
+  </div>
+</div>
+
+<script>
+async function loadLibrary() {
+  const el = document.getElementById('library-content');
+  try {
+    const data = await api('/api/library');
+    const all = [...(data.owned || []), ...(data.free || [])];
+    if (!all.length) {
+      el.innerHTML = `<p style="color:var(--ink-dim);">No games yet. <a href="/games">Browse our store</a> to find your first game!</p>`;
+      return;
+    }
+
+    el.innerHTML = `<div style="color:var(--ink-dim); margin-bottom:1rem;">${all.length} game${all.length !== 1 ? 's' : ''} in your library</div>
+      <div class="card-grid">
+        ${all.map(g => `
+          <div class="game-card" onclick="location.href='/game/${g.slug}'">
+            <div class="game-card-cover">🎮
+              <span class="badge ${g.is_premium ? 'badge-premium' : 'badge-free'}">✓ Owned</span>
+            </div>
+            <div class="game-card-body">
+              <div class="title">${g.title}</div>
+              <div class="desc">${g.description}</div>
+              <div class="meta">
+                <span class="chip chip-accent">${g.category}</span>
+                <span>${'⭐'.repeat(g.difficulty)}</span>
+              </div>
+              <button class="btn btn-primary btn-sm" style="margin-top:0.75rem;" onclick="event.stopPropagation(); playGame('${g.slug}', '${g.title}')">▶ Play</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>`;
+  } catch(err) {
+    el.innerHTML = '<p style="color:var(--danger);">Error loading library. Please login.</p>';
+  }
+}
+
+function playGame(slug, title) {
+  showToast(`Launching ${title}... (connect Go-Tone device first!)`, 'success');
+  // In production this would open the game window/webview
+  // For now, just launch the game page
+  // location.href = `/game/${slug}/play`;
+}
+
+loadLibrary();
+</script>
+{% endblock %}
