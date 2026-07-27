@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, Request, HTTPException, status
+from fastapi import FastAPI, Request, HTTPException, status, APIRouter
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -26,7 +26,7 @@ if static_dir.exists():
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
 # Root router (pages, HTML)
-pages = FastAPI()
+pages = APIRouter()
 
 
 def auth_user(request: Request) -> Optional[dict]:
@@ -63,40 +63,40 @@ def auth_user(request: Request) -> Optional[dict]:
 @pages.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     """Landing page — store."""
-    return templates.TemplateResponse("index.html", {"request": request, "title": "Go-Tone Games"})
+    return templates.TemplateResponse(request, "index.html", context={"title": "Go-Tone Games"})
 
 
 @pages.get("/login", response_class=HTMLResponse)
 async def login(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request, "title": "Login"})
+    return templates.TemplateResponse(request, "login.html", context={"title": "Login"})
 
 
 @pages.get("/register", response_class=HTMLResponse)
 async def register(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request, "title": "Register"})
+    return templates.TemplateResponse(request, "register.html", context={"title": "Register"})
 
 
 @pages.get("/games", response_class=HTMLResponse)
 async def games(request: Request):
     """Browse store."""
-    return templates.TemplateResponse("games.html", {"request": request, "title": "Browse Games"})
+    return templates.TemplateResponse(request, "games.html", context={"title": "Browse Games"})
 
 
 @pages.get("/game/{slug}", response_class=HTMLResponse)
 async def game_detail(request: Request, slug: str):
     """Game detail page."""
-    return templates.TemplateResponse("game_detail.html", {"request": request, "title": f"Game — {slug}", "slug": slug})
+    return templates.TemplateResponse(request, "game_detail.html", context={"title": f"Game — {slug}", "slug": slug})
 
 
 @pages.get("/library", response_class=HTMLResponse)
 async def library(request: Request):
     """User's game library."""
-    return templates.TemplateResponse("library.html", {"request": request, "title": "My Games"})
+    return templates.TemplateResponse(request, "library.html", context={"title": "My Games"})
 
 
 @pages.get("/leaderboard/{slug}", response_class=HTMLResponse)
 async def leaderboard(request: Request, slug: str):
-    return templates.TemplateResponse("leaderboard.html", {"request": request, "title": f"Leaderboard — {slug}", "slug": slug})
+    return templates.TemplateResponse(request, "leaderboard.html", context={"title": f"Leaderboard — {slug}", "slug": slug})
 
 
 # ── Startup ───────────────────────────────────────────────────────────────

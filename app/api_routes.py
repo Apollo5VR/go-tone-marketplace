@@ -11,7 +11,7 @@ from app.auth_utils import (
 )
 from app.schemas import (
     UserCreate, UserLogin, UserResponse, TokenResponse, GameResponse,
-    ReviewCreate, ScoreCreate,
+    ReviewCreate, ScoreCreate, WishlistAdd,
 )
 
 router = APIRouter()
