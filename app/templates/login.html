@@ -2,18 +2,18 @@
 {% block title %}Login — Go-Tone Games{% endblock %}
 
 {% block content %}
-<div class="container auth-page">
+<div class="auth">
   <div class="auth-card">
     <h1>Welcome Back</h1>
-    <p class="subtitle">Login to access your games</p>
+    <p class="sub">Login to access your games</p>
     <form onsubmit="handleLogin(event)">
-      <div class="form-group">
+      <div class="fg">
         <label>Email</label>
-        <input class="form-input" id="email" type="email" required placeholder="you@example.com" />
+        <input class="fi" id="email" type="email" required placeholder="you@example.com" />
       </div>
-      <div class="form-group">
+      <div class="fg">
         <label>Password</label>
-        <input class="form-input" type="password" id="password" required />
+        <input class="fi" type="password" id="password" required />
       </div>
       <button class="btn btn-primary" style="width:100%; justify-content:center;" type="submit">Login</button>
     </form>
@@ -34,11 +34,13 @@ async function handleLogin(e) {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
-    setToken(res.access_token);
-    showToast(`Welcome back, ${res.user.name}!`);
+    localStorage.setItem('gtoken', res.access_token);
+    tok = res.access_token;
+    updateNav();
+    toast(`Welcome back, ${res.user.name}!`);
     location.href = '/';
   } catch(err) {
-    showToast('Invalid email or password', 'error');
+    toast('Invalid email or password', 'error');
   }
 }
 </script>

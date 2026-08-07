@@ -2,22 +2,22 @@
 {% block title %}Register — Go-Tone Games{% endblock %}
 
 {% block content %}
-<div class="container auth-page">
+<div class="auth">
   <div class="auth-card">
     <h1>Create Account</h1>
-    <p class="subtitle">Start playing Go-Tone games today</p>
+    <p class="sub">Start playing Go-Tone games today</p>
     <form onsubmit="handleRegister(event)">
-      <div class="form-group">
+      <div class="fg">
         <label>Name</label>
-        <input class="form-input" id="name" required placeholder="Your name" />
+        <input class="fi" id="name" required placeholder="Your name" />
       </div>
-      <div class="form-group">
+      <div class="fg">
         <label>Email</label>
-        <input class="form-input" type="email" id="email" required placeholder="you@example.com" />
+        <input class="fi" type="email" id="email" required placeholder="you@example.com" />
       </div>
-      <div class="form-group">
+      <div class="fg">
         <label>Password (min 6 chars)</label>
-        <input class="form-input" type="password" id="password" required minlength="6" />
+        <input class="fi" type="password" id="password" required minlength="6" />
       </div>
       <button class="btn btn-primary" style="width:100%; justify-content:center;" type="submit">Create Account</button>
     </form>
@@ -39,11 +39,13 @@ async function handleRegister(e) {
       method: 'POST',
       body: JSON.stringify({ name, email, password }),
     });
-    setToken(res.access_token);
-    showToast(`Welcome to Go-Tone, ${name}!`);
+    localStorage.setItem('gtoken', res.access_token);
+    tok = res.access_token;
+    updateNav();
+    toast(`Welcome to Go-Tone, ${name}!`);
     location.href = '/';
   } catch(err) {
-    showToast('Registration failed: ' + err.message, 'error');
+    toast('Registration failed: ' + err.message, 'error');
   }
 }
 </script>
