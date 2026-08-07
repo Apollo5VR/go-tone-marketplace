@@ -1,6 +1,6 @@
 """API routes for Go-Tone Marketplace."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from fastapi.responses import HTMLResponse, RedirectResponse
 import secrets
 from datetime import datetime
@@ -73,7 +73,7 @@ def auth_login(data: UserLogin):
 
 
 @router.get("/api/user/profile")
-def get_profile(authorization: str = None):
+def get_profile(authorization: str = Header(None)):
     """Get current user profile (JWT required)."""
     token = _get_token(authorization)
     payload = decode_token(token)
@@ -166,7 +166,7 @@ def get_leaderboard(slug: str, limit: int = 10):
 # ── Reviews ─────────────────────────────────────────────────────────────────
 
 @router.post("/api/games/{slug}/reviews")
-def add_review(slug: str, data: ReviewCreate, authorization: str = None):
+def add_review(slug: str, data: ReviewCreate, authorization: str = Header(None)):
     """Add a review (requires auth)."""
     token = _get_token(authorization)
     payload = decode_token(token)
@@ -209,7 +209,7 @@ def add_review(slug: str, data: ReviewCreate, authorization: str = None):
 # ── Library (user's owned games) ─────────────────────────────────────────────
 
 @router.get("/api/library")
-def get_library(authorization: str = None):
+def get_library(authorization: str = Header(None)):
     """Get user's owned games."""
     token = _get_token(authorization)
     payload = decode_token(token)
@@ -236,7 +236,7 @@ def get_library(authorization: str = None):
 
 
 @router.post("/api/library/{game_slug}/purchase")
-def purchase_game(game_slug: str, authorization: str = None):
+def purchase_game(game_slug: str, authorization: str = Header(None)):
     """Purchase a game (demo: free checkout)."""
     token = _get_token(authorization)
     payload = decode_token(token)
@@ -273,7 +273,7 @@ def purchase_game(game_slug: str, authorization: str = None):
 # ── Scores ────────────────────────────────────────────────────────────────────
 
 @router.post("/api/games/{slug}/score")
-def submit_score(slug: str, data: ScoreCreate, authorization: str = None):
+def submit_score(slug: str, data: ScoreCreate, authorization: str = Header(None)):
     """Submit a game score."""
     token = _get_token(authorization)
     payload = decode_token(token)
@@ -298,7 +298,7 @@ def submit_score(slug: str, data: ScoreCreate, authorization: str = None):
 # ── Wishlist ──────────────────────────────────────────────────────────────────
 
 @router.get("/api/wishlist")
-def get_wishlist(authorization: str = None):
+def get_wishlist(authorization: str = Header(None)):
     """Get user's wishlist."""
     token = _get_token(authorization)
     payload = decode_token(token)
@@ -315,7 +315,7 @@ def get_wishlist(authorization: str = None):
 
 
 @router.post("/api/wishlist")
-def add_wishlist(item: WishlistAdd, authorization: str = None):
+def add_wishlist(item: WishlistAdd, authorization: str = Header(None)):
     """Add a game to wishlist."""
     token = _get_token(authorization)
     payload = decode_token(token)
@@ -337,7 +337,7 @@ def add_wishlist(item: WishlistAdd, authorization: str = None):
 
 
 @router.delete("/api/wishlist/{game_id}")
-def remove_wishlist(game_id: str, authorization: str = None):
+def remove_wishlist(game_id: str, authorization: str = Header(None)):
     """Remove from wishlist."""
     token = _get_token(authorization)
     payload = decode_token(token)

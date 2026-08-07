@@ -91,12 +91,17 @@ async def game_detail(request: Request, slug: str):
 @pages.get("/library", response_class=HTMLResponse)
 async def library(request: Request):
     """User's game library."""
-    return templates.TemplateResponse(request, "library.html", context={"title": "My Games"})
+    return templates.TemplateResponse(request, "library.html", context={"title": "My Library"})
 
 
 @pages.get("/leaderboard/{slug}", response_class=HTMLResponse)
 async def leaderboard(request: Request, slug: str):
     return templates.TemplateResponse(request, "leaderboard.html", context={"title": f"Leaderboard — {slug}", "slug": slug})
+
+
+@pages.get("/subscribe", response_class=HTMLResponse)
+async def subscribe(request: Request):
+    return templates.TemplateResponse(request, "subscribe.html", context={"title": "Get Go-Tone — $9.99/mo"})
 
 
 # ── Startup ───────────────────────────────────────────────────────────────

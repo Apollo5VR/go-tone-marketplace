@@ -52,7 +52,7 @@ async function loadGame() {
     <div class="desc">${res.description}</div>
     <div class="meta" style="margin-top:0.75rem;">
       <span class="chip chip-accent">${res.category}</span>
-      <span class="stars">${'⭐'.repeat(res.difficulty) || '⭐'}</span>
+      <span>${'⭐'.repeat(res.difficulty) || '⭐'}</span>
       <span>Mode <b>${res.default_mode}</b></span>
       <span><b>${res.min_weight}</b>-<b>${res.max_weight}</b> lb</span>
     </div>
@@ -63,7 +63,7 @@ async function loadGame() {
       <div class="spec-item"><div class="label">Rating</div><div class="val">${(res.rating || 0).toFixed(1)} (${res.reviews_count || 0} reviews)</div></div>
     </div>
     <div class="game-actions" id="game-actions">
-      <!-- Action buttons loaded by JS -->
+      <button class="btn btn-primary" style="font-size:1.1rem; padding:0.9rem 2.5rem;" onclick="playGame('${res.slug}', '${res.title}')"><span style="font-size:1.3rem;">▶</span> Play Now</button>
     </div>
   `;
 
@@ -83,58 +83,10 @@ async function loadGame() {
   if (currentToken) {
     document.getElementById('review-form').style.display = 'block';
   }
-
-  renderActions(res);
 }
 
-async function renderActions(game) {
-  const actions = document.getElementById('game-actions');
-  const tier = (payload && payload.tier) || 'free';
-
-  let myLibrary = [];
-  try { myLibrary = (await api('/api/library')).owned || []; } catch(e) {}
-  const owned = myLibrary.find(g => g.slug === game.slug);
-
-  if (owned) {
-    actions.innerHTML = `
-      <button class="btn btn-primary" onclick="location.href='/game/${game.slug}/play'">▶ Play Game</button>
-      <span class="chip chip-accent">✓ Owned</span>
-    `;
-  } else if (game.price === 0) {
-    actions.innerHTML = `
-      <button class="btn btn-primary" onclick="addFreeGame('${game.id}', '${game.title}')">✓ Add to Library (Free)</button>
-    `;
-  } else {
-    const canBuy = tier !== 'free' ? 'true' : 'false';
-    actions.innerHTML = `
-      <button class="btn btn-primary" onclick="purchaseGame('${game.id}', '${game.title}', ${canBuy})">Buy for $${game.price}</button>
-      <button class="btn" onclick="addToWishlist('${game.id}', '${game.title}')">♡ Wishlist</button>
-    `;
-  }
-}
-
-async function addFreeGame(gameId, title) {
-  const { owned } = await api('/api/library');
-  const game = owned.find(g => g.id === gameId);
-  if (game) {
-    showToast(`${title} added to library!`);
-    renderActions({ slug: game.slug, price: 0 });
-  }
-}
-
-async function purchaseGame(gameId, title, canBuy) {
-  if (!canBuy) {
-    showToast('Upgrade your subscription to purchase premium games', 'error');
-    return;
-  }
-  const { message } = await api(`/api/library/${slug}/purchase`, { method: 'POST' });
-  showToast(message);
-  renderActions({ slug: game.slug, price: 0 });
-}
-
-async function addToWishlist(gameId, title) {
-  await api('/api/wishlist', { method: 'POST', body: JSON.stringify({ game_id: gameId }) });
-  showToast(`${title} added to wishlist!`);
+function playGame(slug, title) {
+  showToast(`Launching ${title}... connect your Go-Tone device!`, 'success');
 }
 
 async function submitReview() {

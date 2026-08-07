@@ -4,7 +4,7 @@
 {% block content %}
 <div class="container">
   <div class="section-header">
-    <h1>My Games</h1>
+    <h1>My Library</h1>
     <div style="display:flex; gap:0.5rem;">
       <button class="btn" onclick="loadLibrary()">↻ Refresh</button>
     </div>
@@ -22,7 +22,7 @@ async function loadLibrary() {
     const data = await api('/api/library');
     const all = [...(data.owned || []), ...(data.free || [])];
     if (!all.length) {
-      el.innerHTML = `<p style="color:var(--ink-dim);">No games yet. <a href="/games">Browse our store</a> to find your first game!</p>`;
+      el.innerHTML = `<p style="color:var(--ink-dim);">Your library is empty. <a href="/">Browse our library</a> to find your first game!</p>`;
       return;
     }
 
@@ -30,9 +30,7 @@ async function loadLibrary() {
       <div class="card-grid">
         ${all.map(g => `
           <div class="game-card" onclick="location.href='/game/${g.slug}'">
-            <div class="game-card-cover">🎮
-              <span class="badge ${g.is_premium ? 'badge-premium' : 'badge-free'}">✓ Owned</span>
-            </div>
+            <div class="game-card-cover">🎮</div>
             <div class="game-card-body">
               <div class="title">${g.title}</div>
               <div class="desc">${g.description}</div>
@@ -40,7 +38,7 @@ async function loadLibrary() {
                 <span class="chip chip-accent">${g.category}</span>
                 <span>${'⭐'.repeat(g.difficulty)}</span>
               </div>
-              <button class="btn btn-primary btn-sm" style="margin-top:0.75rem;" onclick="event.stopPropagation(); playGame('${g.slug}', '${g.title}')">▶ Play</button>
+              <button class="btn btn-primary btn-sm" style="margin-top:0.75rem; width:100%;" onclick="event.stopPropagation(); playGame('${g.slug}', '${g.title}')">▶ Play</button>
             </div>
           </div>
         `).join('')}
@@ -51,10 +49,7 @@ async function loadLibrary() {
 }
 
 function playGame(slug, title) {
-  showToast(`Launching ${title}... (connect Go-Tone device first!)`, 'success');
-  // In production this would open the game window/webview
-  // For now, just launch the game page
-  // location.href = `/game/${slug}/play`;
+  showToast(`Launching ${title}... connect your Go-Tone device!`, 'success');
 }
 
 loadLibrary();

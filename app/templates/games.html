@@ -1,21 +1,20 @@
 {% extends "base.html" %}
-{% block title %}Browse Games — Go-Tone Games{% endblock %}
+{% block title %}Library — Go-Tone Games{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container-wide">
   <div class="section-header">
-    <h1>Browse Games</h1>
+    <h1>Your Library</h1>
+    <span style="color:var(--ink-dim); font-size:0.9rem;" id="game-count">Loading...</span>
   </div>
 
   <!-- Filters -->
   <div class="filter-bar" id="filters">
-    <span class="chip active" data-cat="all">All</span>
-    <span class="chip" data-cat="strength">Strength</span>
-    <span class="chip" data-cat="cardio">Cardio</span>
-    <span class="chip" data-cat="flexibility">Flexibility</span>
-    <span class="chip" data-cat="full_body">Full Body</span>
-    <span class="chip" data-cat="free" style="margin-left:auto;">Free</span>
-    <span class="chip" data-cat="premium">Premium</span>
+    <span class="chip active" data-cat="all">All Games</span>
+    <span class="chip" data-cat="strength">💪 Strength</span>
+    <span class="chip" data-cat="cardio">🏃 Cardio</span>
+    <span class="chip" data-cat="flexibility">🧘 Flexibility</span>
+    <span class="chip" data-cat="full_body">🔥 Full Body</span>
   </div>
 
   <!-- Grid -->
@@ -26,15 +25,15 @@
 
 <script>
 const grid = document.getElementById('game-grid');
+const countEl = document.getElementById('game-count');
 let currentFilter = 'all';
 
-async function loadGames(category = 'all', premium = null) {
+async function loadGames(category = 'all') {
   const params = new URLSearchParams({ category });
-  if (premium === true) params.set('premium', '1');
-  if (premium === false) params.set('premium', '0');
 
   const res = await api(`/api/games?${params}`);
   grid.innerHTML = '';
+  countEl.textContent = `${res.length} games in library`;
 
   res.forEach(game => {
     const card = document.createElement('div');
@@ -43,20 +42,17 @@ async function loadGames(category = 'all', premium = null) {
     card.innerHTML = `
       <div class="game-card-cover">
         🎮
-        <span class="badge ${game.is_premium ? 'badge-premium' : 'badge-free'}">
-          ${game.price === 0 ? 'FREE' : '$' + game.price}
-        </span>
+        <div class="play-overlay" onclick="event.stopPropagation(); playGame('${game.slug}', '${game.title}')">▶</div>
       </div>
       <div class="game-card-body">
         <div class="title">${game.title}</div>
-        <div class="desc">${game.description.substring(0, 120)}${game.description.length > 120 ? '...' : ''}</div>
+        <div class="desc">${game.description.substring(0, 120)}${game.description.length > 120 ? '..' : ''}</div>
         <div class="meta">
           <span class="chip chip-accent">${game.category}</span>
           <span>${'⭐'.repeat(game.difficulty) || '⭐'}</span>
-          <span>Mode ${game.default_mode}</span>
-          <span>${game.min_weight}-${game.max_weight}lb</span>
+          <span class="chip">${game.min_weight}-${game.max_weight}lb</span>
         </div>
-        ${game.price ? `<div class="price-tag">$${game.price}</div>` : '<div class="price-tag" style="color:var(--success);">FREE</div>'}
+        <button class="btn btn-primary btn-sm" style="margin-top:0.75rem; width:100%;" onclick="event.stopPropagation(); playGame('${game.slug}', '${game.title}')">▶ Play Now</button>
       </div>
     `;
     grid.appendChild(card);
@@ -74,11 +70,11 @@ document.getElementById('filters').addEventListener('click', (e) => {
   chip.classList.add('active');
 
   const cat = chip.dataset.cat;
-  let premium = null;
-  if (cat === 'free') { premium = false; }
-  else if (cat === 'premium') { premium = true; }
-
-  loadGames(cat === 'free' || cat === 'premium' ? 'all' : cat, premium);
+  loadGames(cat === 'all' ? 'all' : cat);
 });
+
+function playGame(slug, title) {
+  showToast(`Launching ${title}... connect your Go-Tone device!`, 'success');
+}
 </script>
 {% endblock %}
