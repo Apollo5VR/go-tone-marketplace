@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Admin Login{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #06080d;
+      --bg-2: #0d1117;
+      --bg-3: #161b22;
+      --ink: #c9d1d9;
+      --ink-dim: #484f58;
+      --line: #21262d;
+      --accent: #f97316;
+      --accent-glow: rgba(249, 115, 22, 0.12);
+      --danger: #f85149;
+      --success: #3fb950;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+    }
+    .login-wrap {
+      width: 100%;
+      max-width: 400px;
+      padding: 1.5rem;
+    }
+    .login-box {
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 2.5rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .login-box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), #fb923c, var(--accent));
+    }
+    .shield-icon {
+      width: 56px; height: 56px;
+      margin: 0 auto 1.5rem;
+      background: var(--accent-glow);
+      border: 1px solid rgba(249,115,22,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .login-box h1 {
+      text-align: center;
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 0.3rem;
+      letter-spacing: -0.02em;
+    }
+    .login-box .sub {
+      text-align: center;
+      color: var(--ink-dim);
+      font-size: 0.8rem;
+      margin-bottom: 2rem;
+    }
+    .fg { margin-bottom: 1rem; }
+    .fg label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--ink-dim);
+      margin-bottom: 0.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .fi {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: border-color 0.15s;
+    }
+    .fi:focus { outline: none; border-color: var(--accent); }
+    .btn {
+      width: 100%;
+      padding: 0.7rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #000;
+      transition: all 0.15s;
+      font-family: inherit;
+      margin-top: 0.5rem;
+    }
+    .btn:hover { filter: brightness(1.1); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .error-msg {
+      background: rgba(248,81,73,0.1);
+      border: 1px solid rgba(248,81,73,0.3);
+      color: var(--danger);
+      padding: 0.6rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.75rem;
+      color: var(--ink-dim);
+      text-decoration: none;
+    }
+    .back-link:hover { color: var(--ink); }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-box">
+      <div class="shield-icon">🛡️</div>
+      <h1>Go-Tone Admin</h1>
+      <p class="sub">Authorized personnel only</p>
+
+      <div class="error-msg" id="error"></div>
+
+      <form id="loginForm">
+        <div class="fg">
+          <label for="email">Email</label>
+          <input class="fi" type="email" id="email" placeholder="admin@gotone.local" required autocomplete="username">
+        </div>
+        <div class="fg">
+          <label for="password">Password</label>
+          <input class="fi" type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button class="btn" type="submit" id="submitBtn">Sign In</button>
+      </form>
+    </div>
+    <a class="back-link" href="/">← Back to marketplace</a>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const errEl = document.getElementById('error');
+    const btn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Authenticating…';
+
+      try {
+        const res = await fetch('/admin/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+          }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.detail || 'Login failed');
+        }
+
+        localStorage.setItem('gtoken', data.access_token);
+        localStorage.setItem('guser', JSON.stringify(data.user));
+        location.href = '/admin/';
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    });
+  </script>
+</body>
+</html>

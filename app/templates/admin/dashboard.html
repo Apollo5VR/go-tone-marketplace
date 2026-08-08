@@ -1,0 +1,65 @@
+{% extends "admin/base.html" %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+<div class="stats-grid" id="statsGrid">
+  <div class="stat-card"><div class="label">Total Users</div><div class="value accent" id="sUsers">—</div></div>
+  <div class="stat-card"><div class="label">Subscribers</div><div class="value success" id="sSubs">—</div></div>
+  <div class="stat-card"><div class="label">Free Users</div><div class="value" id="sFree">—</div></div>
+  <div class="stat-card"><div class="label">Active Users</div><div class="value info" id="sActive">—</div></div>
+  <div class="stat-card"><div class="label">Total Games</div><div class="value accent" id="sGames">—</div></div>
+  <div class="stat-card"><div class="label">Total Scores</div><div class="value" id="sScores">—</div></div>
+  <div class="stat-card"><div class="label">Total Reviews</div><div class="value" id="sReviews">—</div></div>
+  <div class="stat-card"><div class="label">Avg Rating</div><div class="value success" id="sRating">—</div></div>
+</div>
+
+<div class="table-wrap">
+  <div class="table-header">
+    <h3>Recent Signups</h3>
+  </div>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Email</th>
+        <th>Tier</th>
+        <th>Joined</th>
+      </tr>
+    </thead>
+    <tbody id="recentTable">
+      <tr><td colspan="4" style="text-align:center;color:var(--ink-dim);padding:2rem;">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadDashboard() {
+  try {
+    const stats = await api('/admin/api/stats');
+
+    document.getElementById('sUsers').textContent = stats.total_users;
+    document.getElementById('sSubs').textContent = stats.subscribed;
+    document.getElementById('sFree').textContent = stats.free_users;
+    document.getElementById('sActive').textContent = stats.active_users;
+    document.getElementById('sGames').textContent = stats.total_games;
+    document.getElementById('sScores').textContent = stats.total_scores;
+    document.getElementById('sReviews').textContent = stats.total_reviews;
+    document.getElementById('sRating').textContent = stats.avg_rating + ' / 5';
+
+    const tbody = document.getElementById('recentTable');
+    tbody.innerHTML = stats.recent_users.map(u => `
+      <tr>
+        <td style="font-weight:600">${u.name || '—'}</td>
+        <td style="color:var(--ink-dim)">${u.email}</td>
+        <td><span class="badge ${u.tier !== 'free' ? 'badge-success' : 'badge-info'}">${u.tier}</span></td>
+        <td style="color:var(--ink-dim);font-size:0.78rem">${u.created_at}</td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+loadDashboard();
+</script>
+{% endblock %}

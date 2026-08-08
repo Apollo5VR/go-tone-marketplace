@@ -1,0 +1,222 @@
+{% extends "admin/base.html" %}
+{% block page_title %}Manage Games{% endblock %}
+{% block content %}
+<div class="search-bar">
+  <button class="btn btn-primary" onclick="openGameModal()">+ Add Game</button>
+</div>
+
+<div class="table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Slug</th>
+        <th>Category</th>
+        <th>Difficulty</th>
+        <th>Price</th>
+        <th>Premium</th>
+        <th>Rating</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="gamesTable">
+      <tr><td colspan="8" style="text-align:center;color:var(--ink-dim);padding:2rem;">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Game Modal -->
+<div class="modal-overlay" id="gameModal">
+  <div class="modal">
+    <h3 id="gameModalTitle">Add Game</h3>
+    <form id="gameForm">
+      <input type="hidden" id="gSlug">
+      <div class="fg">
+        <label>Title</label>
+        <input class="fi" id="gTitle" required>
+      </div>
+      <div class="fg">
+        <label>Slug</label>
+        <input class="fi" id="gSlugField" placeholder="auto-generated from title">
+      </div>
+      <div class="fg">
+        <label>Description</label>
+        <textarea class="fi" id="gDesc"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <div class="fg">
+          <label>Category</label>
+          <select class="fi" id="gCategory">
+            <option value="strength">Strength</option>
+            <option value="cardio">Cardio</option>
+            <option value="flexibility">Flexibility</option>
+            <option value="full_body">Full Body</option>
+            <option value="core">Core</option>
+            <option value="endurance">Endurance</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Difficulty (1-5)</label>
+          <input class="fi" type="number" id="gDifficulty" min="1" max="5" value="1">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <div class="fg">
+          <label>Min Weight (lbs)</label>
+          <input class="fi" type="number" id="gMinWeight" value="5">
+        </div>
+        <div class="fg">
+          <label>Max Weight (lbs)</label>
+          <input class="fi" type="number" id="gMaxWeight" value="50">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <div class="fg">
+          <label>Default Mode</label>
+          <input class="fi" type="number" id="gMode" value="1">
+        </div>
+        <div class="fg">
+          <label>Price ($)</label>
+          <input class="fi" type="number" step="0.01" id="gPrice" value="0">
+        </div>
+      </div>
+      <div class="fg">
+        <label>Cover Image URL</label>
+        <input class="fi" id="gCover" placeholder="/static/game.png">
+      </div>
+      <div class="fg" style="display:flex;align-items:center;gap:0.5rem;">
+        <input type="checkbox" id="gPremium" style="width:auto;">
+        <label for="gPremium" style="margin:0">Is Premium</label>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn" onclick="closeGameModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="gSubmitBtn">Save Game</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let gamesData = [];
+
+async function loadGames() {
+  try {
+    gamesData = await api('/admin/api/games');
+    renderGames();
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+
+function renderGames() {
+  const tbody = document.getElementById('gamesTable');
+  if (!gamesData.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--ink-dim);padding:2rem;">No games yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = gamesData.map(g => `
+    <tr>
+      <td style="font-weight:600">${esc(g.title)}</td>
+      <td style="color:var(--ink-dim);font-family:monospace;font-size:0.75rem">${esc(g.slug)}</td>
+      <td><span class="badge badge-info">${esc(g.category)}</span></td>
+      <td>${'⭐'.repeat(g.difficulty)}</td>
+      <td>${g.price > 0 ? '$'+g.price.toFixed(2) : 'Free'}</td>
+      <td>${g.is_premium ? '<span class="badge badge-accent">Yes</span>' : '<span class="badge badge-info">No</span>'}</td>
+      <td>${g.rating > 0 ? '⭐ '+g.rating.toFixed(1)+' ('+g.reviews_count+')' : '—'}</td>
+      <td>
+        <div class="action-group">
+          <button class="btn btn-sm" onclick="editGame('${esc(g.slug)}')">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteGame('${esc(g.slug)}', '${esc(g.title)}')">🗑️</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openGameModal(slug) {
+  document.getElementById('gameModal').classList.add('active');
+  document.getElementById('gameForm').reset();
+  document.getElementById('gSlug').value = '';
+  document.getElementById('gameModalTitle').textContent = 'Add Game';
+  document.getElementById('gSubmitBtn').textContent = 'Add Game';
+  if (slug) {
+    const g = gamesData.find(x => x.slug === slug);
+    if (g) populateGameForm(g);
+  }
+}
+
+function populateGameForm(g) {
+  document.getElementById('gSlug').value = g.slug;
+  document.getElementById('gSlugField').value = g.slug;
+  document.getElementById('gTitle').value = g.title;
+  document.getElementById('gDesc').value = g.description || '';
+  document.getElementById('gCategory').value = g.category;
+  document.getElementById('gDifficulty').value = g.difficulty;
+  document.getElementById('gMinWeight').value = g.min_weight;
+  document.getElementById('gMaxWeight').value = g.max_weight;
+  document.getElementById('gMode').value = g.default_mode;
+  document.getElementById('gPrice').value = g.price;
+  document.getElementById('gCover').value = g.cover_image || '';
+  document.getElementById('gPremium').checked = !!g.is_premium;
+  document.getElementById('gameModalTitle').textContent = 'Edit Game';
+  document.getElementById('gSubmitBtn').textContent = 'Save Changes';
+}
+
+function closeGameModal() {
+  document.getElementById('gameModal').classList.remove('active');
+}
+
+function editGame(slug) {
+  openGameModal(slug);
+}
+
+async function deleteGame(slug, title) {
+  if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
+  try {
+    await api(`/admin/api/games/${slug}`, { method: 'DELETE' });
+    toast('Game deleted');
+    loadGames();
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+
+document.getElementById('gameForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const existingSlug = document.getElementById('gSlug').value;
+  const data = {
+    title: document.getElementById('gTitle').value,
+    slug: document.getElementById('gSlugField').value || document.getElementById('gTitle').value.toLowerCase().replace(/\s+/g, '-'),
+    description: document.getElementById('gDesc').value,
+    category: document.getElementById('gCategory').value,
+    difficulty: parseInt(document.getElementById('gDifficulty').value),
+    min_weight: parseInt(document.getElementById('gMinWeight').value),
+    max_weight: parseInt(document.getElementById('gMaxWeight').value),
+    default_mode: parseInt(document.getElementById('gMode').value),
+    price: parseFloat(document.getElementById('gPrice').value) || 0,
+    cover_image: document.getElementById('gCover').value,
+    is_premium: document.getElementById('gPremium').checked,
+  };
+
+  try {
+    if (existingSlug) {
+      await api(`/admin/api/games/${existingSlug}`, { method: 'PUT', body: JSON.stringify(data) });
+      toast('Game updated');
+    } else {
+      await api('/admin/api/games', { method: 'POST', body: JSON.stringify(data) });
+      toast('Game created');
+    }
+    closeGameModal();
+    loadGames();
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+});
+
+function esc(s) { return (s||'').toString().replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+
+loadGames();
+</script>
+{% endblock %}

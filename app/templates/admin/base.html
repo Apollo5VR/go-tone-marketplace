@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Admin{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #06080d;
+      --bg-2: #0d1117;
+      --bg-3: #161b22;
+      --bg-4: #1c2129;
+      --ink: #c9d1d9;
+      --ink-dim: #484f58;
+      --ink-muted: #30363d;
+      --line: #21262d;
+      --accent: #f97316;
+      --accent-glow: rgba(249,115,22,0.12);
+      --danger: #f85149;
+      --danger-bg: rgba(248,81,73,0.1);
+      --success: #3fb950;
+      --success-bg: rgba(63,185,80,0.1);
+      --info: #58a6ff;
+      --info-bg: rgba(88,166,255,0.1);
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 240px;
+      background: var(--bg-2);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+    }
+    .sidebar-brand {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .sidebar-brand .shield {
+      width: 32px; height: 32px;
+      background: var(--accent-glow);
+      border: 1px solid rgba(249,115,22,0.3);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+    .sidebar-brand h1 {
+      font-size: 0.9rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .sidebar-brand h1 span { color: var(--accent); }
+    .sidebar-nav {
+      flex: 1;
+      padding: 1rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.6rem 0.85rem;
+      border-radius: 8px;
+      color: var(--ink-dim);
+      text-decoration: none;
+      font-size: 0.83rem;
+      font-weight: 600;
+      transition: all 0.12s;
+    }
+    .sidebar-nav a:hover { background: var(--bg-3); color: var(--ink); }
+    .sidebar-nav a.active {
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid rgba(249,115,22,0.2);
+    }
+    .sidebar-nav a .icon { font-size: 1rem; width: 20px; text-align: center; }
+    .sidebar-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--line);
+    }
+    .sidebar-footer .user-info {
+      font-size: 0.75rem;
+      color: var(--ink-dim);
+    }
+    .sidebar-footer .user-info strong { color: var(--ink); }
+    .sidebar-footer .logout-btn {
+      display: block;
+      margin-top: 0.5rem;
+      font-size: 0.72rem;
+      color: var(--ink-dim);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      padding: 0;
+      text-align: left;
+    }
+    .sidebar-footer .logout-btn:hover { color: var(--danger); }
+
+    /* ── Main content ── */
+    .main {
+      flex: 1;
+      margin-left: 240px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .topbar {
+      height: 56px;
+      background: var(--bg-2);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .topbar h2 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .topbar .right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .content { flex: 1; padding: 2rem; }
+
+    /* ── Stats cards ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+    }
+    .stat-card .label {
+      font-size: 0.68rem;
+      color: var(--ink-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 600;
+    }
+    .stat-card .value {
+      font-size: 1.75rem;
+      font-weight: 800;
+      margin-top: 0.25rem;
+      letter-spacing: -0.02em;
+    }
+    .stat-card .value.accent { color: var(--accent); }
+    .stat-card .value.success { color: var(--success); }
+    .stat-card .value.info { color: var(--info); }
+
+    /* ── Tables ── */
+    .table-wrap {
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .table-header h3 {
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    .data-table th {
+      text-align: left;
+      padding: 0.7rem 1rem;
+      border-bottom: 1px solid var(--line);
+      color: var(--ink-dim);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 600;
+      background: var(--bg-3);
+    }
+    .data-table td {
+      padding: 0.7rem 1rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: var(--bg-3); }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 99px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .badge-accent { background: var(--accent-glow); color: var(--accent); }
+    .badge-success { background: var(--success-bg); color: var(--success); }
+    .badge-danger { background: var(--danger-bg); color: var(--danger); }
+    .badge-info { background: var(--info-bg); color: var(--info); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.78rem;
+      cursor: pointer;
+      border: 1px solid var(--line);
+      background: var(--bg-3);
+      color: var(--ink);
+      transition: all 0.12s;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .btn:hover { border-color: var(--ink-dim); }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: #000; }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-danger { border-color: var(--danger); color: var(--danger); }
+    .btn-danger:hover { background: var(--danger-bg); }
+    .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.7rem; }
+
+    /* ── Forms ── */
+    .fg { margin-bottom: 0.85rem; }
+    .fg label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--ink-dim);
+      margin-bottom: 0.25rem;
+    }
+    .fi {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 0.82rem;
+    }
+    .fi:focus { outline: none; border-color: var(--accent); }
+    select.fi { cursor: pointer; }
+    textarea.fi { resize: vertical; min-height: 60px; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.15s;
+    }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal {
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 520px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+    .modal h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+      margin-top: 1.25rem;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 999;
+      padding: 0.7rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      animation: t-in 0.3s ease;
+      border: 1px solid;
+    }
+    .toast-success { background: var(--success-bg); border-color: var(--success); color: var(--success); }
+    .toast-error { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
+    @keyframes t-in { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* ── Search ── */
+    .search-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .search-bar .fi {
+      width: auto;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    /* ── Action buttons in table ── */
+    .action-group { display: flex; gap: 0.3rem; }
+
+    @media (max-width: 768px) {
+      .sidebar { width: 60px; }
+      .sidebar-brand h1, .sidebar-nav a span, .sidebar-footer { display: none; }
+      .sidebar-nav a { justify-content: center; padding: 0.6rem; }
+      .main { margin-left: 60px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="shield">🛡️</div>
+      <h1><span>Go</span>-Tone</h1>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/admin/" class="{% if request.url.path == '/admin/' %}active{% endif %}">
+        <span class="icon">📊</span>
+        <span>Dashboard</span>
+      </a>
+      <a href="/admin/games" class="{% if '/admin/games' in request.url.path %}active{% endif %}">
+        <span class="icon">🎮</span>
+        <span>Games</span>
+      </a>
+      <a href="/admin/users" class="{% if '/admin/users' in request.url.path %}active{% endif %}">
+        <span class="icon">👥</span>
+        <span>Users</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        Logged in as <strong id="admin-name">—</strong>
+      </div>
+      <button class="logout-btn" onclick="logout()">Sign out</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+      <div class="right">
+        <a href="/" class="btn btn-sm" target="_blank">↗ View Site</a>
+      </div>
+    </div>
+    <div class="content">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+
+  <script>
+    // Auth guard
+    const tok = localStorage.getItem('gtoken');
+    if (!tok && !location.pathname.includes('/admin/login')) {
+      location.href = '/admin/login';
+    }
+
+    async function api(path, opts = {}) {
+      const h = { 'Content-Type': 'application/json' };
+      if (tok) h['Authorization'] = `Bearer ${tok}`;
+      const r = await fetch(path, { ...opts, headers: { ...h, ...(opts.headers||{}) } });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail || 'API error');
+      return d;
+    }
+
+    function toast(msg, type='success') {
+      const ex = document.querySelector('.toast'); if (ex) ex.remove();
+      const el = document.createElement('div');
+      el.className = `toast toast-${type}`;
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    async function loadAdminName() {
+      try {
+        const me = await api('/admin/api/me');
+        document.getElementById('admin-name').textContent = me.name || me.email;
+      } catch(e) {}
+    }
+
+    function logout() {
+      localStorage.removeItem('gtoken');
+      localStorage.removeItem('guser');
+      location.href = '/admin/login';
+    }
+
+    loadAdminName();
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

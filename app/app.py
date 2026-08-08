@@ -10,8 +10,9 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.database import init_db, get_db, seed_games
+from app.database import init_db, get_db, seed_games, seed_admin
 from app.api_routes import router as api_router
+from app.admin import router as admin_router
 from app.auth_utils import decode_token
 
 # ── App setup ─────────────────────────────────────────────────────────────────
@@ -105,12 +106,14 @@ async def subscribe(request: Request):
 async def startup():
     init_db()
     seed_games()
+    seed_admin()
 
 
 # ── Mount routers ─────────────────────────────────────────────────────────
 
 app.include_router(pages)
 app.include_router(api_router)
+app.include_router(admin_router)
 
 
 # ── 404 Handler ──

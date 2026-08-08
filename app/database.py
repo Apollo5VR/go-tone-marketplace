@@ -28,8 +28,18 @@ def get_db():
         conn.close()
 
 
+def migrate_db(conn: sqlite3.Connection):
+    """Apply column migrations for existing databases."""
+    columns = [row[1] for row in conn.execute("PRAGMA table_info(users)").fetchall()]
+    if "is_admin" not in columns:
+        conn.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0")
+    if "is_active" not in columns:
+        conn.execute("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1")
+    conn.commit()
+
+
 def init_db():
-    """Create tables if they don't exist."""
+    """Create tables if they don't exist and apply migrations."""
     with get_db() as conn:
         conn.executescript("""
             CREATE TABLE IF NOT EXISTS users (
@@ -38,9 +48,11 @@ def init_db():
                 password_hash TEXT NOT NULL,
                 name TEXT,
                 tier TEXT NOT NULL DEFAULT 'free',
+                 is_admin INTEGER DEFAULT 0,
+                 is_active INTEGER DEFAULT 1,
                 created_at TEXT DEFAULT (datetime('now')),
                 updated_at TEXT DEFAULT (datetime('now'))
-            );
+                );
 
             CREATE TABLE IF NOT EXISTS games (
                 id TEXT PRIMARY KEY,
@@ -103,6 +115,30 @@ def init_db():
             );
         """)
         conn.commit()
+        migrate_db(conn)
+
+
+def seed_admin():
+    """Create a default admin user if none exists."""
+    import secrets
+    from app.auth_utils import hash_password
+
+    with get_db() as conn:
+        existing = conn.execute(
+            "SELECT id FROM users WHERE is_admin = 1"
+        ).fetchone()
+        if existing:
+            return
+
+        admin_id = secrets.token_hex(16)
+        pw_hash = hash_password("admin")  # Will be changed on first login
+        conn.execute(
+            """INSERT INTO users (id, email, password_hash, name, tier, is_admin, is_active)
+               VALUES (?, ?, ?, ?, 'annual', 1, 1)""",
+            (admin_id, "admin@gotone.local", pw_hash, "Administrator"),
+        )
+        conn.commit()
+        return admin_id
 
 
 def seed_games():

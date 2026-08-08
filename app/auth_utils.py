@@ -23,9 +23,9 @@ def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
 
-def create_token(user_id: str, email: str, tier: str) -> str:
+def create_token(user_id: str, email: str, tier: str, is_admin: bool = False) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    payload = {"sub": user_id, "email": email, "tier": tier, "exp": expire}
+    payload = {"sub": user_id, "email": email, "tier": tier, "admin": 1 if is_admin else 0, "exp": expire}
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
@@ -34,3 +34,10 @@ def decode_token(token: str) -> Optional[dict]:
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except JWTError:
         return None
+
+
+def require_admin(payload: dict) -> None:
+    """Raise if the token payload is not admin."""
+    if not payload or not payload.get("admin"):
+        from fastapi import HTTPException
+        raise HTTPException(403, "Admin access required")

@@ -1,0 +1,188 @@
+{% extends "admin/base.html" %}
+{% block page_title %}Manage Users{% endblock %}
+{% block content %}
+<div class="search-bar">
+  <input class="fi" type="text" id="searchInput" placeholder="Search by email or name…">
+  <select class="fi" id="tierFilter" style="width:auto;min-width:140px;">
+    <option value="">All Tiers</option>
+    <option value="free">Free</option>
+    <option value="monthly">Monthly</option>
+    <option value="annual">Annual</option>
+  </select>
+  <button class="btn" onclick="loadUsers()">🔍 Search</button>
+</div>
+
+<div class="table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Tier</th>
+        <th>Admin</th>
+        <th>Status</th>
+        <th>Joined</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="usersTable">
+      <tr><td colspan="7" style="text-align:center;color:var(--ink-dim);padding:2rem;">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- User Edit Modal -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal">
+    <h3 id="userModalTitle">Edit User</h3>
+    <form id="userForm">
+      <input type="hidden" id="uId">
+      <div class="fg">
+        <label>Email</label>
+        <input class="fi" id="uEmail" readonly style="opacity:0.6">
+      </div>
+      <div class="fg">
+        <label>Name</label>
+        <input class="fi" id="uName">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <div class="fg">
+          <label>Tier</label>
+          <select class="fi" id="uTier">
+            <option value="free">Free</option>
+            <option value="monthly">Monthly</option>
+            <option value="annual">Annual</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Status</label>
+          <select class="fi" id="uActive">
+            <option value="1">Active</option>
+            <option value="0">Deactivated</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg" style="display:flex;align-items:center;gap:0.5rem;">
+        <input type="checkbox" id="uAdmin" style="width:auto;">
+        <label for="uAdmin" style="margin:0">Is Admin</label>
+      </div>
+      <div class="fg">
+        <label>Reset Password (leave blank to keep)</label>
+        <input class="fi" type="password" id="uPassword" placeholder="New password…">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn" onclick="closeUserModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let usersData = [];
+
+async function loadUsers() {
+  const search = document.getElementById('searchInput').value;
+  const tier = document.getElementById('tierFilter').value;
+  try {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (tier) params.set('tier', tier);
+    usersData = await api(`/admin/api/users?${params}`);
+    renderUsers();
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+
+function renderUsers() {
+  const tbody = document.getElementById('usersTable');
+  if (!usersData.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--ink-dim);padding:2rem;">No users found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = usersData.map(u => `
+    <tr>
+      <td style="font-weight:600">${esc(u.name || '—')}</td>
+      <td style="color:var(--ink-dim);font-size:0.78rem">${esc(u.email)}</td>
+      <td><span class="badge ${u.tier !== 'free' ? 'badge-success' : 'badge-info'}">${esc(u.tier)}</span></td>
+      <td>${u.is_admin ? '<span class="badge badge-accent">Yes</span>' : '—'}</td>
+      <td>${u.is_active ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-danger">Inactive</span>'}</td>
+      <td style="color:var(--ink-dim);font-size:0.78rem">${esc(u.created_at)}</td>
+      <td>
+        <div class="action-group">
+          <button class="btn btn-sm" onclick="editUser('${esc(u.id)}')">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteUser('${esc(u.id)}', '${esc(u.name || u.email)}')">🗑️</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function editUser(userId) {
+  document.getElementById('userModal').classList.add('active');
+  try {
+    const user = await api(`/admin/api/users/${userId}`);
+    document.getElementById('uId').value = user.id;
+    document.getElementById('uEmail').value = user.email;
+    document.getElementById('uName').value = user.name || '';
+    document.getElementById('uTier').value = user.tier;
+    document.getElementById('uActive').value = user.is_active ? '1' : '0';
+    document.getElementById('uAdmin').checked = !!user.is_admin;
+    document.getElementById('uPassword').value = '';
+    document.getElementById('userModalTitle').textContent = `Edit: ${user.name || user.email}`;
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+
+function closeUserModal() {
+  document.getElementById('userModal').classList.remove('active');
+}
+
+async function deleteUser(userId, name) {
+  if (!confirm(`Delete "${name}"? This removes all their data and cannot be undone.`)) return;
+  try {
+    await api(`/admin/api/users/${userId}`, { method: 'DELETE' });
+    toast('User deleted');
+    loadUsers();
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+
+document.getElementById('userForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const userId = document.getElementById('uId').value;
+  const data = {
+    name: document.getElementById('uName').value,
+    tier: document.getElementById('uTier').value,
+    is_active: document.getElementById('uActive').value === '1',
+    is_admin: document.getElementById('uAdmin').checked,
+  };
+  const pw = document.getElementById('uPassword').value;
+  if (pw) data.password = pw;
+
+  try {
+    await api(`/admin/api/users/${userId}`, { method: 'PUT', body: JSON.stringify(data) });
+    toast('User updated');
+    closeUserModal();
+    loadUsers();
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+});
+
+// Search on Enter
+document.getElementById('searchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') loadUsers();
+});
+document.getElementById('tierFilter').addEventListener('change', loadUsers);
+
+function esc(s) { return (s||'').toString().replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+
+loadUsers();
+</script>
+{% endblock %}

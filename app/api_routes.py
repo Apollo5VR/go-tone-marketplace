@@ -1,6 +1,7 @@
 """API routes for Go-Tone Marketplace."""
 
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Header, Body
 from fastapi.responses import HTMLResponse, RedirectResponse
 import secrets
 from datetime import datetime
@@ -58,7 +59,7 @@ def auth_login(data: UserLogin):
         if not user or not verify_password(data.password, user["password_hash"]):
             raise HTTPException(401, "Invalid credentials")
 
-    token = create_token(user["id"], user["email"], user["tier"])
+    token = create_token(user["id"], user["email"], user["tier"], is_admin=bool(user.get("is_admin")))
     return TokenResponse(
         access_token=token,
         token_type="bearer",
@@ -91,13 +92,19 @@ def get_profile(authorization: str = Header(None)):
     )
 
 
-def _get_token(authorization: str | None) -> str:
+def _get_token(authorization: Optional[str] = None) -> str:
     if not authorization:
         raise HTTPException(401, "Missing Authorization header")
     scheme, _, token = authorization.partition(" ")
     if scheme.lower() != "bearer":
         raise HTTPException(401, "Invalid auth scheme")
     return token
+
+
+def _require_admin(payload: dict) -> None:
+    """Raise 403 if not admin."""
+    from app.auth_utils import require_admin
+    require_admin(payload)
 
 
 # ── Games / Storefront ─────────────────────────────────────────────────────
@@ -181,38 +188,80 @@ def add_review(slug: str, data: ReviewCreate, authorization: str = Header(None))
     return {"ok": True, "review_id": review_id}
 
 
-# ╔════════════════════════════════════════════════════════════════════════════╗
-# ║  ⚠️  TEMPORARY DEMO MODE (see /app.py route_override)                       ║
-# ║  In production we'd do session cookies.                                    ║
-# ╚════════════════════════════════════════════════════════════════════════════╝
+# ── Subscription ─────────────────────────────────────────────────────────────
 
-# ── Library (user's owned games) ─────────────────────────────────────────────
-
-@router.get("/api/library")
-def get_library(authorization: str = Header(None)):
-    """Get user's owned games."""
+@router.post("/api/subscribe")
+def subscribe_to_tier(data: dict = Body(...), authorization: str = Header(None)):
+    """Upgrade user tier (simulated checkout). Requires auth."""
     token = _get_token(authorization)
     payload = decode_token(token)
     if not payload:
         raise HTTPException(401, "Invalid token")
 
+    tier = data.get("tier", "").strip()
+    if tier not in ("monthly", "annual"):
+        raise HTTPException(400, "Invalid tier — must be 'monthly' or 'annual'")
+
     with get_db() as conn:
-        items = conn.execute(
-            """SELECT g.* FROM games g
-               JOIN user_games ug ON g.id = ug.game_id
-               WHERE ug.user_id = ?
-               ORDER BY ug.purchased_at DESC""",
-            (payload["sub"],),
-        ).fetchall()
-        free = conn.execute(
-            "SELECT * FROM games WHERE is_premium = 0 AND NOT EXISTS (SELECT 1 FROM user_games WHERE game_id = games.id AND user_id = ?)",
-            (payload["sub"],),
-        ).fetchall()
+        conn.execute("UPDATE users SET tier = ?, updated_at = datetime('now') WHERE id = ?",
+                     (tier, payload["sub"]))
+        conn.commit()
 
-    owned = [GameResponse(**dict(r)) for r in items]
-    free_games = [GameResponse(**dict(r)) for r in free]
+        # Return a fresh token with updated tier
+        user = conn.execute("SELECT * FROM users WHERE id = ?", (payload["sub"],)).fetchone()
+    new_token = create_token(user["id"], user["email"], tier, is_admin=bool(user.get("is_admin")))
 
-    return {"owned": owned, "free": free_games}
+    return {
+        "ok": True,
+        "tier": tier,
+        "access_token": new_token,
+        "token_type": "bearer",
+        "user": UserResponse(
+            id=user["id"],
+            email=user["email"],
+            name=user["name"],
+            tier=tier,
+            created_at=user["created_at"],
+        ),
+    }
+
+
+# ── Library (user's owned games) ─────────────────────────────────────────────
+
+@router.get("/api/library")
+def get_library(authorization: str = Header(None)):
+    """Get user's games — all games if subscribed, free games only if not."""
+    token = _get_token(authorization)
+    payload = decode_token(token)
+    if not payload:
+        raise HTTPException(401, "Invalid token")
+
+    user_tier = payload.get("tier", "free")
+
+    with get_db() as conn:
+        if user_tier in ("monthly", "annual"):
+            # Subscribed: all games are accessible
+            all_games = conn.execute("SELECT * FROM games ORDER BY title").fetchall()
+            owned = [GameResponse(**dict(r)) for r in all_games]
+            free_games = []
+        else:
+            # Free tier: only non-premium games
+            free = conn.execute(
+                "SELECT * FROM games WHERE is_premium = 0 ORDER BY title"
+            ).fetchall()
+            free_games = [GameResponse(**dict(r)) for r in free]
+
+            # Also include previously "purchased" games
+            items = conn.execute(
+                """SELECT g.* FROM games g
+                   JOIN user_games ug ON g.id = ug.game_id
+                   WHERE ug.user_id = ?
+                   ORDER BY ug.purchased_at DESC""",
+                (payload["sub"],),
+            ).fetchall()
+            owned = [GameResponse(**dict(r)) for r in items]
+
+    return {"owned": owned, "free": free_games, "tier": user_tier}
 
 
 @router.post("/api/library/{game_slug}/purchase")
