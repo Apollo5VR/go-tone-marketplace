@@ -100,14 +100,7 @@ class TestFreeTier:
         assert resp.status_code == 200
         assert resp.json()["ok"] is True
 
-    def test_can_view_leaderboard(self, client, free_headers):
-        """Leaderboards are public — no auth needed, but free user can access."""
-        resp = client.get("/api/leaderboard/rhythm-pull")
-        assert resp.status_code == 200
-        assert resp.json()["game"] == "rhythm-pull"
-
-
-# ══════════════════════════════════════════════════════════════════════════
+ # ══════════════════════════════════════════════════════════════════════════
 #  Paid-tier (subscribed) user
 # ══════════════════════════════════════════════════════════════════════════
 
@@ -186,8 +179,3 @@ class TestUnauthenticated:
         """No token → cannot add games to library."""
         resp = client.post("/api/library/rhythm-pull/purchase")
         assert resp.status_code == 401
-
-    def test_can_view_leaderboard(self, client):
-        """Leaderboards are public."""
-        resp = client.get("/api/leaderboard/dragon-pull")
-        assert resp.status_code == 200

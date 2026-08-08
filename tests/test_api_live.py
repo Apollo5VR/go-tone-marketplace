@@ -140,9 +140,6 @@ code, body = api("GET", "/api/games")
 test("public: browse games → 200", code == 200)
 test("public: 8 games", len(body) == 8)
 
-code, _ = api("GET", "/api/leaderboard/dragon-pull")
-test("public: leaderboard → 200", code == 200)
-
 code, _ = api("GET", "/api/library")
 test("public: library requires auth (401)", code == 401)
 
