@@ -80,7 +80,7 @@
 </div>
 <script>
 function handleSubscribe(plan) {
-  showToast(`Starting ${plan} subscription...`, 'success');
+  toast(`Starting ${plan} subscription...`, 'success');
   // In production: redirect to Stripe checkout
   // window.location.href = `/api/subscribe/${plan}`;
 }

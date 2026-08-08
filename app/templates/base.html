@@ -1,4 +1,3 @@
-/* Base template - clean, Netflix-style game library */
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +6,7 @@
   <title>{% block title %}Go-Tone Games{% endblock %}</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    /* Base template - clean, Netflix-style game library */
     :root {
       --bg: #0b0f1a;
       --bg-2: #111827;
@@ -63,36 +63,46 @@
     }
     .badge .dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; }
 
-    /* Cards - Netflix style: big art, minimal text */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 0.75rem;
+    /* ── Card Grid — Netflix-style ─────────────────────────────── */
+    .container-wide { max-width: 1440px; margin: 0 auto; padding: 0 2rem 3rem; }
+    .section-header {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 1.5rem; padding-top: 2rem;
     }
-    .card {
+    .section-header h1 { font-size: 1.5rem; font-weight: 800; }
+    .section-header h2 { font-size: 1.2rem; font-weight: 800; }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .game-card {
       background: var(--bg-2);
       border-radius: var(--radius);
       overflow: hidden;
       cursor: pointer;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border: 1px solid var(--line);
     }
-    .card:hover {
+    .game-card:hover {
       transform: translateY(-4px);
       box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+      border-color: rgba(34,211,238,0.25);
     }
-    .card-img {
-      height: 300px;
-      background: var(--accent-glow);
+    .game-card-cover {
+      height: 200px;
+      background: linear-gradient(135deg, var(--accent-glow), rgba(34,211,238,0.04));
       display: flex; align-items: center; justify-content: center;
       font-size: 4rem;
       position: relative;
+      overflow: hidden;
     }
-    .card-img::after {
+    .game-card-cover::after {
       content: '';
       position: absolute; inset: 0;
       background: linear-gradient(to top, rgba(17,24,39,0.95) 0%, transparent 50%);
     }
-    .card-play {
+    .play-overlay {
       position: absolute;
       bottom: 12px; left: 12px; z-index: 2;
       background: rgba(34,211,238,0.95);
@@ -100,13 +110,43 @@
       padding: 0.4rem 0.9rem;
       font-size: 0.72rem; font-weight: 700; color: var(--bg);
       opacity: 0; transition: opacity 0.2s;
-      pointer-events: none;
     }
-    .card:hover .card-play { opacity: 1; }
-    .card-name {
-      padding: 0.8rem 0.9rem 0.9rem;
-      font-size: 0.9rem; font-weight: 700;
+    .game-card:hover .play-overlay { opacity: 1; }
+    .game-card-body {
+      padding: 0.9rem 1rem 1rem;
+    }
+    .game-card-body .title {
+      font-size: 0.95rem; font-weight: 700;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 0.2rem;
+    }
+    .game-card-body .desc {
+      font-size: 0.78rem; color: var(--ink-dim);
+      line-height: 1.4; margin-bottom: 0.5rem;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .game-card-body .meta {
+      display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap;
+      font-size: 0.72rem; color: var(--ink-dim);
+    }
+
+    /* ── Chips & Filters ───────────────────────────────────────── */
+    .chip {
+      padding: 0.2rem 0.6rem; border-radius: 99px;
+      font-size: 0.68rem; font-weight: 600;
+      background: transparent; border: 1px solid var(--line);
+      color: var(--ink-dim); cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+    .chip:hover { border-color: var(--ink-dim); color: var(--ink); }
+    .chip.active, .chip-accent {
+      background: var(--accent-glow); border-color: var(--accent); color: var(--accent);
+    }
+    .filter-bar {
+      display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1.5rem;
     }
 
     /* Buttons */
@@ -135,62 +175,75 @@
     }
     .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
 
-    /* Section */
+    /* ── Container ────────────────────────────────────────────── */
     .container { max-width: 1440px; margin: 0 auto; padding: 0 2rem 3rem; }
-    .sec { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5rem; }
-    .sec h2 { font-size: 1.2rem; font-weight: 800; }
-    .sec a { font-size: 0.85rem; }
 
-    /* Filters */
-    .filters { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
-    .filt {
-      padding: 0.3rem 0.9rem; border-radius: 99px;
-      font-size: 0.78rem; font-weight: 600;
-      background: transparent; border: 1px solid var(--line);
-      color: var(--ink-dim); cursor: pointer; transition: all 0.15s;
-      font-family: inherit;
+    /* ── Game Detail ────────────────────────────────────────── */
+    .game-hero {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;
     }
-    .filt:hover { border-color: var(--ink-dim); color: var(--ink); }
-    .filt.on { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
-
-    /* Detail page */
-    .detail {
-      max-width: 1100px; margin: 0 auto; padding: 2.5rem 2rem;
-      display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;
+    .game-hero-visual {
+      height: 380px; background: linear-gradient(135deg, var(--accent-glow), rgba(34,211,238,0.04));
+      border-radius: var(--radius); display: flex; align-items: center; justify-content: center;
+      font-size: 5rem; border: 1px solid var(--line);
     }
-    .detail-art {
-      height: 380px; background: var(--accent-glow); border-radius: var(--radius);
-      display: flex; align-items: center; justify-content: center; font-size: 5rem;
+    .game-info .title {
+      font-size: 2rem; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1;
     }
-    .info h1 { font-size: 2.5rem; font-weight: 900; letter-spacing: -0.02em; line-height: 1.08; }
-    .info p { color: var(--ink-dim); font-size: 0.95rem; margin-top: 1rem; line-height: 1.6; max-width: 420px; }
-    .specs { display: flex; gap: 0.75rem; margin-top: 2rem; flex-wrap: wrap; }
-    .sp { background: var(--bg-2); border-radius: 8px; padding: 0.75rem 1rem; flex: 1; min-width: 100px; }
-    .sp-l { font-size: 0.65rem; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.04em; }
-    .sp-v { font-size: 1.1rem; font-weight: 700; margin-top: 0.15rem; }
-    .actions { margin-top: 1.5rem; }
-    .back { color: var(--ink-dim); font-size: 0.85rem; margin-bottom: 1.5rem; display: inline-block; font-weight: 600; }
-    .back:hover { color: var(--ink); }
-
-    /* Pricing */
-    .pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; max-width: 900px; margin: 2rem auto; }
-    .pc {
+    .game-info .desc {
+      color: var(--ink-dim); font-size: 0.95rem; line-height: 1.6; margin-top: 0.75rem;
+    }
+    .game-info .meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
+    .specs {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.5rem; margin-top: 1.5rem;
+    }
+    .spec-item {
       background: var(--bg-2); border: 1px solid var(--line);
-      border-radius: var(--radius); padding: 2rem; text-align: center; transition: border-color 0.2s;
+      border-radius: 8px; padding: 0.75rem;
     }
-    .pc:hover { border-color: var(--accent); }
-    .pc.feat { border-color: var(--accent); position: relative; }
-    .pc.feat::before {
+    .spec-item .label {
+      font-size: 0.62rem; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .spec-item .val { font-size: 0.9rem; font-weight: 700; margin-top: 0.15rem; }
+    .game-actions { margin-top: 1.5rem; }
+
+    /* ── Reviews ──────────────────────────────────────────── */
+    .review-card {
+      background: var(--bg-2); border: 1px solid var(--line);
+      border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 0.5rem;
+    }
+    .review-card .author { font-weight: 600; font-size: 0.85rem; }
+    .review-stars { color: #fbbf24; font-size: 0.8rem; }
+    .review-text { color: var(--ink-dim); font-size: 0.85rem; margin-top: 0.25rem; }
+    .review-date { color: var(--ink-dim); font-size: 0.7rem; margin-top: 0.35rem; }
+
+    /* ── Pricing ───────────────────────────────────────────── */
+    .pricing-card {
+      background: var(--bg-2); border: 1px solid var(--line);
+      border-radius: var(--radius); padding: 2rem; text-align: center;
+      transition: border-color 0.2s;
+    }
+    .pricing-card:hover { border-color: var(--accent); }
+    .pricing-card.featured {
+      border-color: var(--accent); position: relative; background: var(--accent-glow);
+    }
+    .pricing-card.featured::before {
       content: 'BEST VALUE'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
       background: var(--accent); color: var(--bg); padding: 0.15rem 0.8rem;
       border-radius: 99px; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em;
     }
-    .pc h3 { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--ink-dim); letter-spacing: 0.04em; }
-    .pr { font-size: 2.5rem; font-weight: 900; color: var(--accent); margin-top: 0.75rem; }
-    .pr span { font-size: 1rem; color: var(--ink-dim); font-weight: 500; }
-    .pc ul { list-style: none; margin: 1.25rem 0; text-align: left; }
-    .pc li { padding: 0.25rem 0; color: var(--ink-dim); font-size: 0.85rem; }
-    .pc li::before { content: '✓ '; color: var(--success); font-weight: 700; }
+    .pricing-card ul { list-style: none; margin: 1.25rem 0; text-align: left; }
+    .pricing-card li {
+      padding: 0.25rem 0; color: var(--ink-dim); font-size: 0.85rem;
+    }
+    .pricing-card li::before { content: '✓ '; color: var(--success); font-weight: 700; }
+    .price { font-size: 2.5rem; font-weight: 900; color: var(--accent); margin-top: 0.75rem; }
+    .price span { font-size: 1rem; color: var(--ink-dim); font-weight: 500; }
+    .btn-outline {
+      border-color: var(--accent); color: var(--accent); background: transparent;
+    }
+    .btn-outline:hover { background: var(--accent-glow); }
 
     /* Leaderboard */
     .lb { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
@@ -199,13 +252,6 @@
     .lb tr:hover td { background: var(--bg-2); }
     .lb .rank { font-weight: 800; color: var(--accent); width: 40px; }
     .lb .score { font-weight: 700; color: var(--success); }
-
-    /* Reviews */
-    .rv { background: var(--bg-2); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 0.5rem; }
-    .rv .author { font-weight: 600; font-size: 0.85rem; }
-    .rv .text { color: var(--ink-dim); font-size: 0.85rem; margin-top: 0.25rem; }
-    .rv .date { color: var(--ink-dim); font-size: 0.7rem; margin-top: 0.35rem; }
-    .rv .stars { color: #fbbf24; font-size: 0.8rem; }
 
     /* Auth */
     .auth { min-height: calc(100vh - 56px); display: flex; align-items: center; justify-content: center; }
@@ -228,10 +274,11 @@
     .foot { border-top: 1px solid var(--line); padding: 1.5rem 2rem; text-align: center; color: var(--ink-dim); font-size: 0.75rem; margin-top: 2rem; }
 
     @media (max-width: 768px) {
-      .detail { grid-template-columns: 1fr; }
+      .game-hero { grid-template-columns: 1fr; }
+      .game-hero-visual { height: 250px; }
       .hero h1 { font-size: 2.25rem; }
-      .grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
-      .card-img { height: 220px; }
+      .card-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+      .game-card-cover { height: 160px; }
     }
   </style>
 </head>
