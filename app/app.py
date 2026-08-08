@@ -94,11 +94,6 @@ async def library(request: Request):
     return templates.TemplateResponse(request, "library.html", context={"title": "My Library"})
 
 
-@pages.get("/leaderboard/{slug}", response_class=HTMLResponse)
-async def leaderboard(request: Request, slug: str):
-    return templates.TemplateResponse(request, "leaderboard.html", context={"title": f"Leaderboard — {slug}", "slug": slug})
-
-
 @pages.get("/subscribe", response_class=HTMLResponse)
 async def subscribe(request: Request):
     return templates.TemplateResponse(request, "subscribe.html", context={"title": "Get Go-Tone — $9.99/mo"})
@@ -116,6 +111,17 @@ async def startup():
 
 app.include_router(pages)
 app.include_router(api_router)
+
+
+# ── 404 Handler ──
+
+@app.exception_handler(404)
+async def not_found_handler(request: Request, exc: HTTPException):
+    """Serve a styled 404 page for all missing routes."""
+    return HTMLResponse(
+        status_code=404,
+        content=Path(__file__).parent.joinpath("templates", "404.html").read_text(),
+    )
 
 
 # ── CLI launch ──────────────────────────────────────────────────────────────

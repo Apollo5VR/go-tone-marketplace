@@ -143,26 +143,6 @@ def get_game(slug: str):
     return game_dict
 
 
-@router.get("/api/leaderboard/{slug}")
-def get_leaderboard(slug: str, limit: int = 10):
-    """Get top scores for a game."""
-    with get_db() as conn:
-        game = conn.execute("SELECT id FROM games WHERE slug = ?", (slug,)).fetchone()
-        if not game:
-            raise HTTPException(404, "Game not found")
-
-        scores = conn.execute(
-            """SELECT s.*, u.name, u.tier
-               FROM scores s JOIN users u ON s.user_id = u.id
-               WHERE s.game_id = ?
-               ORDER BY s.score DESC, s.created_at ASC
-               LIMIT ?""",
-            (game["id"], limit),
-        ).fetchall()
-
-    return {"game": slug, "leaderboard": [dict(s) for s in scores]}
-
-
 # ── Reviews ─────────────────────────────────────────────────────────────────
 
 @router.post("/api/games/{slug}/reviews")
