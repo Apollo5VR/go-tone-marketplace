@@ -3,10 +3,10 @@
 
 {% block content %}
 <div class="container">
-  <a href="/games" style="color:var(--ink-dim); font-size:0.85rem; margin-bottom:1.5rem; display:inline-block;">← Back to Games</a>
+  <a href="/library" style="color:var(--ink-dim); font-size:0.85rem; margin-bottom:1.5rem; display:inline-block; transition: color 0.15s;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-dim)'">← Back to Library</a>
 
   <div class="game-hero">
-    <div class="game-hero-visual">🎮</div>
+    <div class="game-hero-visual" id="game-visual">🎮</div>
     <div class="game-info" id="game-info">
       <!-- Loaded via JS -->
     </div>
@@ -16,15 +16,16 @@
   <div style="margin-top:2.5rem;">
     <div class="section-header">
       <h2>Reviews</h2>
+      <span style="color:var(--ink-dim); font-size:0.85rem;" id="review-count"></span>
     </div>
     <div id="reviews-list">
       <p style="color:var(--ink-dim);">Loading...</p>
     </div>
     <!-- Write review -->
     <div id="review-form" style="display:none; margin-top:1.5rem; max-width:520px;">
-      <div class="form-group">
+      <div class="fg">
         <label>Your Rating</label>
-        <select class="form-input" id="rating">
+        <select class="fi" id="rating">
           <option value="5">⭐⭐⭐⭐⭐ (5)</option>
           <option value="4">⭐⭐⭐⭐ (4)</option>
           <option value="3">⭐⭐⭐ (3)</option>
@@ -32,9 +33,9 @@
           <option value="1">⭐ (1)</option>
         </select>
       </div>
-      <div class="form-group">
+      <div class="fg">
         <label>Comment</label>
-        <textarea class="form-input form-textarea" id="comment" placeholder="What did you think?"></textarea>
+        <textarea class="fi" id="comment" placeholder="What did you think?" rows="3"></textarea>
       </div>
       <button class="btn btn-primary" onclick="submitReview()">Submit Review</button>
     </div>
@@ -46,29 +47,35 @@ const slug = "{{ slug }}";
 
 async function loadGame() {
   const res = await api(`/api/games/${slug}`);
+  
+  // Update visual with category gradient
+  const visual = document.getElementById('game-visual');
+  visual.className = `game-hero-visual poster-cover ${res.category || ''}`;
+  
   const info = document.getElementById('game-info');
   info.innerHTML = `
+    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+      <span class="chip chip-accent">${res.category}</span>
+      <span style="color:var(--success); font-size:0.7rem; font-weight:700;">✦ INCLUDED WITH SUBSCRIPTION</span>
+    </div>
     <div class="title">${res.title}</div>
     <div class="desc">${res.description}</div>
-    <div class="meta" style="margin-top:0.75rem;">
-      <span class="chip chip-accent">${res.category}</span>
-      <span>${'⭐'.repeat(res.difficulty) || '⭐'}</span>
-      <span>Mode <b>${res.default_mode}</b></span>
-      <span><b>${res.min_weight}</b>-<b>${res.max_weight}</b> lb</span>
-    </div>
-    <div class="specs">
+    <div class="specs" style="margin-top:1.5rem;">
       <div class="spec-item"><div class="label">Difficulty</div><div class="val">${'⭐'.repeat(res.difficulty) || '⭐'}</div></div>
       <div class="spec-item"><div class="label">Weight Range</div><div class="val">${res.min_weight} - ${res.max_weight} lb</div></div>
       <div class="spec-item"><div class="label">Exercise Mode</div><div class="val">${res.default_mode}</div></div>
-      <div class="spec-item"><div class="label">Rating</div><div class="val">${(res.rating || 0).toFixed(1)} (${res.reviews_count || 0} reviews)</div></div>
+      <div class="spec-item"><div class="label">Rating</div><div class="val">${(res.rating || 0).toFixed(1)} <span style="font-weight:400; color:var(--ink-dim);">(${res.reviews_count || 0})</span></div></div>
     </div>
-    <div class="game-actions" id="game-actions">
+    <div class="game-actions">
       <button class="btn btn-primary" style="font-size:1.1rem; padding:0.9rem 2.5rem;" onclick="playGame('${res.slug}', '${res.title}')"><span style="font-size:1.3rem;">▶</span> Play Now</button>
     </div>
   `;
 
+  // Reviews
   const reviewsList = document.getElementById('reviews-list');
+  const reviewCount = document.getElementById('review-count');
   if (res.reviews && res.reviews.length) {
+    reviewCount.textContent = `${res.reviews.length} review${res.reviews.length !== 1 ? 's' : ''}`;
     reviewsList.innerHTML = res.reviews.map(r => `
       <div class="review-card">
         <div class="author">${r.reviewer_name || 'Anonymous'} <span class="review-stars">${'⭐'.repeat(r.rating) || '⭐'}</span></div>
@@ -77,6 +84,7 @@ async function loadGame() {
       </div>
     `).join('');
   } else {
+    reviewCount.textContent = 'No reviews yet';
     reviewsList.innerHTML = '<p style="color:var(--ink-dim);">No reviews yet. Be the first!</p>';
   }
 

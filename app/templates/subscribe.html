@@ -1,88 +1,109 @@
 {% extends "base.html" %}
-{% block title %}Pricing — Go-Tone Games{% endblock %}
+{% block title %}Get Go-Tone{% endblock %}
 
 {% block content %}
 <div class="container-wide">
   <!-- Hero -->
-  <div style="text-align:center; padding: 3rem 0 2rem;">
-    <div style="display:inline-block; padding: 0.35rem 1rem; background: var(--accent-glow); border: 1px solid var(--accent); border-radius: 99px; font-size: 0.75rem; font-weight: 700; color: var(--accent); margin-bottom: 1.5rem; letter-spacing: 0.05em; text-transform: uppercase;">
-      Simple Pricing
-    </div>
-    <h1 style="font-size:3rem; font-weight:900; letter-spacing:-0.03em; line-height:1.1; margin-bottom:1rem;">
-      All games.<br><span style="color:var(--accent)">One subscription.</span>
-    </h1>
-    <p style="color:var(--ink-dim); max-width:520px; margin:0 auto; font-size:1.1rem; line-height:1.6;">
-      No per-game purchases. No in-app ads. No microtransactions. Just connect your Go-Tone and play everything.
-    </p>
+  <div style="text-align:center; padding: 3rem 0 2.5rem;">
+    <h1 style="font-size:2.5rem; font-weight:900; letter-spacing:-0.03em;">One subscription.<br><span style="color:var(--accent)">Every workout game.</span></h1>
+    <p style="color:var(--ink-dim); max-width:520px; margin:0.75rem auto 0; font-size:1rem; line-height:1.6;">No per-game purchases, no hidden fees. Just pick a plan and play everything.</p>
   </div>
 
-  <!-- Pricing cards -->
-  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1.5rem; max-width:900px; margin:0 auto; padding:2rem 0;">
-    <!-- Monthly -->
+  <!-- Pricing tiers -->
+  <div class="pricing-grid">
+    <!-- Free tier -->
     <div class="pricing-card">
-      <h3 style="font-size:1.1rem; font-weight:700; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.05em;">Monthly</h3>
-      <div class="price">$9<span>.99/mo</span></div>
-      <ul>
-        <li>All 8+ workout games</li>
-        <li>New games every month</li>
-        <li>Cross-platform progress</li>
-        <li>Leaderboards & achievements</li>
-        <li>Cancel anytime</li>
-      </ul>
-      <a href="#" class="btn btn-outline" style="width:100%; justify-content:center;" onclick="handleSubscribe('monthly')">Start Monthly</a>
-    </div>
-
-    <!-- Annual (featured) -->
-    <div class="pricing-card featured">
-      <h3 style="font-size:1.1rem; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:0.05em;">Annual</h3>
-      <div class="price">$7<span>.99/mo</span></div>
-      <p style="color:var(--success); font-size:0.85rem; margin-top:-0.5rem; margin-bottom:0.5rem; font-weight:600;">Save 20% — billed $95.88/year</p>
-      <ul>
-        <li>Everything in Monthly</li>
-        <li>Save $24/year</li>
-        <li>Early access to new games</li>
-        <li>Priority support</li>
-        <li>Exclusive game themes</li>
-      </ul>
-      <a href="#" class="btn btn-primary" style="width:100%; justify-content:center; font-size:1rem; padding:0.85rem;" onclick="handleSubscribe('annual')">Subscribe Annual</a>
-    </div>
-
-    <!-- Free tier info -->
-    <div class="pricing-card" style="opacity:0.6;">
-      <h3 style="font-size:1.1rem; font-weight:700; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.05em;">Free</h3>
+      <h3>Free</h3>
       <div class="price">$0<span>/mo</span></div>
       <ul>
         <li>2 free games to try</li>
         <li>Access to all games in the library</li>
+        <li>Basic workout tracking</li>
       </ul>
-      <button class="btn" style="width:100%; justify-content:center;" disabled>Currently subscribed</button>
+      <button class="btn btn-outline" style="width:100%; justify-content:center;" disabled>Currently subscribed</button>
+    </div>
+
+    <!-- Monthly tier -->
+    <div class="pricing-card">
+      <h3>Monthly</h3>
+      <div class="price">$9<span>.99/mo</span></div>
+      <ul>
+        <li>All 8+ workout games</li>
+        <li>New games every month</li>
+        <li>Full workout tracking</li>
+        <li>Cancel anytime</li>
+      </ul>
+      <a href="#" class="btn btn-outline" style="width:100%; justify-content:center;">Start Monthly</a>
+    </div>
+
+    <!-- Annual tier (featured) -->
+    <div class="pricing-card featured">
+      <h3>Annual</h3>
+      <div class="price">$7<span>.99/mo</span></div>
+      <p style="color:var(--success); font-size:0.8rem; margin-bottom:0.5rem;">Save 20% — billed $95.88/year</p>
+      <ul>
+        <li>All 8+ workout games</li>
+        <li>New games every month</li>
+        <li>Full workout tracking</li>
+        <li>Priority support</li>
+        <li>Early access to new features</li>
+      </ul>
+      <a href="#" class="btn btn-primary" style="width:100%; justify-content:center;">Subscribe Annual</a>
     </div>
   </div>
 
   <!-- FAQ -->
-  <div style="max-width:700px; margin:3rem auto; padding:2rem 0;">
-    <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:2rem; text-align:center;">Frequently Asked</h2>
-    <div style="display:flex; flex-direction:column; gap:1.5rem;">
-      <div>
-        <h4 style="font-weight:700; margin-bottom:0.3rem;">Which games are included?</h4>
-        <p style="color:var(--ink-dim); font-size:0.9rem;">All 8+ current games: Dragon Pull, Rhythm Pull, Chain Reaction, Rowing Race, Power Hitter, Endurance Mode, Eccentric Gauntlet, and Full Body Battle — plus every new game we release.</p>
-      </div>
-      <div>
-        <h4 style="font-weight:700; margin-bottom:0.3rem;">Can I cancel anytime?</h4>
-        <p style="color:var(--ink-dim); font-size:0.9rem;">Yes. Cancel from your account settings. You'll keep access until the end of your billing period.</p>
-      </div>
-      <div>
-        <h4 style="font-weight:700; margin-bottom:0.3rem;">Do I need the Go-Tone device?</h4>
-        <p style="color:var(--ink-dim); font-size:0.9rem;">Yes — our games are designed exclusively for Go-Tone smart resistance devices. The hardware adapts resistance in real-time to match the game.</p>
-      </div>
+  <div style="margin-top: 4rem; max-width: 680px; margin-left: auto; margin-right: auto;">
+    <h2 style="text-align:center; font-size:1.3rem; font-weight:800; margin-bottom:2rem;">Frequently Asked Questions</h2>
+
+    <div class="faq-item">
+      <h3>Which games are included?</h3>
+      <p>Every game in the Go-Tone library is included with your subscription. No additional purchases required.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Can I cancel anytime?</h3>
+      <p>Yes. Monthly subscriptions cancel instantly. Annual subscriptions continue until the end of your billing period.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Do I need the Go-Tone hardware?</h3>
+      <p>Go-Tone games are designed to work with the Go-Tone smart resistance device. You can also play in demo mode without hardware.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>How do I get started?</h3>
+      <p>Sign up for a free account, subscribe to a plan, and start playing. Games load instantly in your browser — no downloads required.</p>
     </div>
   </div>
 </div>
-<script>
-function handleSubscribe(plan) {
-  toast(`Starting ${plan} subscription...`, 'success');
-  // In production: redirect to Stripe checkout
-  // window.location.href = `/api/subscribe/${plan}`;
-}
-</script>
+
+<style>
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    align-items: start;
+    margin-bottom: 2rem;
+  }
+
+  .faq-item {
+    border-bottom: 1px solid var(--line);
+    padding: 1.25rem 0;
+  }
+  .faq-item h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .faq-item p {
+    color: var(--ink-dim);
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 768px) {
+    .pricing-grid { grid-template-columns: 1fr; max-width: 380px; margin-left: auto; margin-right: auto; }
+  }
+</style>
 {% endblock %}

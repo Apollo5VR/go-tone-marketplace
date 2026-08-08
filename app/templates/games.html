@@ -2,57 +2,59 @@
 {% block title %}Library — Go-Tone Games{% endblock %}
 
 {% block content %}
+<!-- Netflix-style hero with filter bar -->
+<div style="background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 100%); padding: 2rem 0 1rem; border-bottom: 1px solid var(--line);">
+  <div class="container-wide" style="padding-bottom:0;">
+    <h1 style="font-size:1.8rem; font-weight:900; letter-spacing:-0.02em; margin-bottom:0.25rem;">All Games</h1>
+    <p style="color:var(--ink-dim); font-size:0.9rem; margin-bottom:1.25rem;" id="game-count">Loading library...</p>
+    <div class="filter-bar" id="filters">
+      <span class="chip active" data-cat="all">All</span>
+      <span class="chip" data-cat="strength">💪 Strength</span>
+      <span class="chip" data-cat="cardio">🏃 Cardio</span>
+      <span class="chip" data-cat="flexibility">🧘 Flexibility</span>
+      <span class="chip" data-cat="full_body">🔥 Full Body</span>
+    </div>
+  </div>
+</div>
+
+<!-- Game grid -->
 <div class="container-wide">
-  <div class="section-header">
-    <h1>Your Library</h1>
-    <span style="color:var(--ink-dim); font-size:0.9rem;" id="game-count">Loading...</span>
-  </div>
-
-  <!-- Filters -->
-  <div class="filter-bar" id="filters">
-    <span class="chip active" data-cat="all">All Games</span>
-    <span class="chip" data-cat="strength">💪 Strength</span>
-    <span class="chip" data-cat="cardio">🏃 Cardio</span>
-    <span class="chip" data-cat="flexibility">🧘 Flexibility</span>
-    <span class="chip" data-cat="full_body">🔥 Full Body</span>
-  </div>
-
-  <!-- Grid -->
-  <div class="card-grid" id="game-grid">
-    <!-- Filled by JS -->
-  </div>
+  <div class="card-grid" id="game-grid"></div>
 </div>
 
 <script>
 const grid = document.getElementById('game-grid');
 const countEl = document.getElementById('game-count');
 let currentFilter = 'all';
+let allGames = [];
 
 async function loadGames(category = 'all') {
   const params = new URLSearchParams({ category });
-
   const res = await api(`/api/games?${params}`);
+
+  allGames = res;
   grid.innerHTML = '';
-  countEl.textContent = `${res.length} games in library`;
+  const label = category === 'all' ? 'total' : category;
+  countEl.textContent = `${res.length} game${res.length !== 1 ? 's' : ''} ${res.length > 1 ? 'found' : 'found'}`;
 
   res.forEach(game => {
     const card = document.createElement('div');
     card.className = 'game-card';
     card.onclick = () => location.href = `/game/${game.slug}`;
     card.innerHTML = `
-      <div class="game-card-cover">
+      <div class="game-card-cover ${game.category}">
         🎮
         <div class="play-overlay" onclick="event.stopPropagation(); playGame('${game.slug}', '${game.title}')">▶</div>
       </div>
       <div class="game-card-body">
         <div class="title">${game.title}</div>
-        <div class="desc">${game.description.substring(0, 120)}${game.description.length > 120 ? '..' : ''}</div>
+        <div class="desc">${game.description.substring(0, 100)}${game.description.length > 100 ? '...' : ''}</div>
         <div class="meta">
           <span class="chip chip-accent">${game.category}</span>
           <span>${'⭐'.repeat(game.difficulty) || '⭐'}</span>
-          <span class="chip">${game.min_weight}-${game.max_weight}lb</span>
+          <span class="chip">${game.min_weight}-${game.max_weight} lb</span>
         </div>
-        <button class="btn btn-primary btn-sm" style="margin-top:0.75rem; width:100%;" onclick="event.stopPropagation(); playGame('${game.slug}', '${game.title}')">▶ Play Now</button>
+        <button class="btn btn-primary btn-sm" style="margin-top:0.65rem; width:100%;" onclick="event.stopPropagation(); playGame('${game.slug}', '${game.title}')">▶ Play Now</button>
       </div>
     `;
     grid.appendChild(card);
@@ -70,7 +72,7 @@ document.getElementById('filters').addEventListener('click', (e) => {
   chip.classList.add('active');
 
   const cat = chip.dataset.cat;
-  loadGames(cat === 'all' ? 'all' : cat);
+  loadGames(cat);
 });
 
 function playGame(slug, title) {

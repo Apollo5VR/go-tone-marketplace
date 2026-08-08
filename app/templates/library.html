@@ -2,12 +2,10 @@
 {% block title %}My Library — Go-Tone Games{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container-wide">
   <div class="section-header">
     <h1>My Library</h1>
-    <div style="display:flex; gap:0.5rem;">
-      <button class="btn" onclick="loadLibrary()">↻ Refresh</button>
-    </div>
+    <button class="btn" onclick="loadLibrary()">↻ Refresh</button>
   </div>
 
   <div id="library-content">
@@ -22,23 +20,26 @@ async function loadLibrary() {
     const data = await api('/api/library');
     const all = [...(data.owned || []), ...(data.free || [])];
     if (!all.length) {
-      el.innerHTML = `<p style="color:var(--ink-dim);">Your library is empty. <a href="/">Browse our library</a> to find your first game!</p>`;
+      el.innerHTML = `<p style="color:var(--ink-dim);">Your library is empty. <a href="/library">Browse all games</a> to find your first game!</p>`;
       return;
     }
 
-    el.innerHTML = `<div style="color:var(--ink-dim); margin-bottom:1rem;">${all.length} game${all.length !== 1 ? 's' : ''} in your library</div>
+    el.innerHTML = `
       <div class="card-grid">
         ${all.map(g => `
           <div class="game-card" onclick="location.href='/game/${g.slug}'">
-            <div class="game-card-cover">🎮</div>
+            <div class="game-card-cover ${g.category || ''}">
+              🎮
+              <div class="play-overlay" onclick="event.stopPropagation(); playGame('${g.slug}', '${g.title}')">▶</div>
+            </div>
             <div class="game-card-body">
               <div class="title">${g.title}</div>
-              <div class="desc">${g.description}</div>
+              <div class="desc">${g.description.substring(0, 100)}${g.description.length > 100 ? '...' : ''}</div>
               <div class="meta">
-                <span class="chip chip-accent">${g.category}</span>
+                <span class="chip chip-accent">${g.category || 'workout'}</span>
                 <span>${'⭐'.repeat(g.difficulty)}</span>
               </div>
-              <button class="btn btn-primary btn-sm" style="margin-top:0.75rem; width:100%;" onclick="event.stopPropagation(); playGame('${g.slug}', '${g.title}')">▶ Play</button>
+              <button class="btn btn-primary btn-sm" style="margin-top:0.65rem; width:100%;" onclick="event.stopPropagation(); playGame('${g.slug}', '${g.title}')">▶ Play Now</button>
             </div>
           </div>
         `).join('')}

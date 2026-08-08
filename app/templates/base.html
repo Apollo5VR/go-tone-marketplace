@@ -67,13 +67,126 @@
     .container-wide { max-width: 1440px; margin: 0 auto; padding: 0 2rem 3rem; }
     .section-header {
       display: flex; justify-content: space-between; align-items: baseline;
-      margin-bottom: 1.5rem; padding-top: 2rem;
+      margin-bottom: 1rem; padding-top: 2rem;
     }
     .section-header h1 { font-size: 1.5rem; font-weight: 800; }
     .section-header h2 { font-size: 1.2rem; font-weight: 800; }
+
+    /* ── Featured Banner (Steam-style) ─────────────────────────── */
+    .featured-banner {
+      background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg) 100%);
+      border-bottom: 1px solid var(--line);
+      padding: 3rem 2rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .featured-banner::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .featured-content { position: relative; z-index: 1; max-width: 640px; }
+    .featured-badge {
+      display: inline-block; padding: 0.35rem 1rem;
+      background: var(--accent-glow); border: 1px solid var(--accent);
+      border-radius: 99px; font-size: 0.7rem; font-weight: 700;
+      color: var(--accent); margin-bottom: 1rem;
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .featured-content h1 {
+      font-size: 3rem; font-weight: 900; line-height: 1.05;
+      letter-spacing: -0.03em; margin-bottom: 0.75rem;
+    }
+    .featured-content h1 .accent { color: var(--accent); }
+    .featured-content p {
+      color: var(--ink-dim); font-size: 1rem; line-height: 1.6;
+      margin-bottom: 1.5rem; max-width: 520px;
+    }
+    .featured-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .featured-stats { display: flex; gap: 2.5rem; }
+    .stat-val { font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+    .stat-label { font-size: 0.7rem; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+    .featured-visual {
+      font-size: 8rem; opacity: 0.15; filter: grayscale(0.5);
+      position: relative; z-index: 1;
+    }
+
+    /* ── Category Rows (Netflix-style horizontal scroll) ───────── */
+    .category-row { margin-bottom: 0.5rem; }
+    .scroll-row {
+      display: flex; gap: 0.75rem;
+      overflow-x: auto; padding-bottom: 0.5rem;
+      scroll-behavior: smooth;
+    }
+    .scroll-row::-webkit-scrollbar { height: 4px; }
+    .scroll-row::-webkit-scrollbar-track { background: var(--bg); border-radius: 2px; }
+    .scroll-row::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
+    .scroll-row::-webkit-scrollbar-thumb:hover { background: var(--ink-dim); }
+
+    /* ── Poster Cards (Netflix-style) ──────────────────────────── */
+    .game-card-poster {
+      flex: 0 0 220px;
+      background: var(--bg-2);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border: 1px solid var(--line);
+    }
+    .game-card-poster:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      border-color: rgba(34,211,238,0.3);
+      z-index: 5;
+      position: relative;
+    }
+    .poster-cover {
+      height: 300px;
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+    }
+    .poster-cover.strength { background: linear-gradient(135deg, #7c3aed33, #2563eb33, var(--bg-2)); }
+    .poster-cover.cardio { background: linear-gradient(135deg, #dc262633, #f59e0b33, var(--bg-2)); }
+    .poster-cover.flexibility { background: linear-gradient(135deg, #05966933, #0891b233, var(--bg-2)); }
+    .poster-cover.full_body { background: linear-gradient(135deg, #ea580c33, #dc262633, var(--bg-2)); }
+    .poster-cover.core { background: linear-gradient(135deg, #7c3aed33, #ec489933, var(--bg-2)); }
+    .poster-cover.endurance { background: linear-gradient(135deg, #2563eb33, #05966933, var(--bg-2)); }
+    .poster-cover::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
+      background: linear-gradient(to top, var(--bg-2) 0%, transparent 100%);
+    }
+    .poster-cover .play-overlay {
+      position: absolute; inset: 0; z-index: 2;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(11, 15, 26, 0.75);
+      opacity: 0; transition: opacity 0.2s;
+      font-size: 2rem; color: var(--accent);
+    }
+    .game-card-poster:hover .poster-cover .play-overlay { opacity: 1; }
+    .poster-info {
+      padding: 0.75rem 0.85rem 0.85rem;
+    }
+    .poster-info .title {
+      font-size: 0.9rem; font-weight: 700;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 0.3rem;
+    }
+    .poster-info .meta {
+      display: flex; gap: 0.4rem; align-items: center;
+      font-size: 0.7rem; color: var(--ink-dim);
+    }
+
+    /* ── Compact Card Grid (for library/games pages) ────────────── */
     .card-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 1rem;
     }
     .game-card {
@@ -90,30 +203,27 @@
       border-color: rgba(34,211,238,0.25);
     }
     .game-card-cover {
-      height: 200px;
-      background: linear-gradient(135deg, var(--accent-glow), rgba(34,211,238,0.04));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 4rem;
+      height: 160px;
       position: relative;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
       overflow: hidden;
     }
     .game-card-cover::after {
       content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(to top, rgba(17,24,39,0.95) 0%, transparent 50%);
+      position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
+      background: linear-gradient(to top, var(--bg-2) 0%, transparent 100%);
     }
-    .play-overlay {
-      position: absolute;
-      bottom: 12px; left: 12px; z-index: 2;
-      background: rgba(34,211,238,0.95);
-      border-radius: 99px;
-      padding: 0.4rem 0.9rem;
-      font-size: 0.72rem; font-weight: 700; color: var(--bg);
+    .game-card-cover .play-overlay {
+      position: absolute; inset: 0; z-index: 2;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(11, 15, 26, 0.75);
       opacity: 0; transition: opacity 0.2s;
+      font-size: 2rem; color: var(--accent);
     }
-    .game-card:hover .play-overlay { opacity: 1; }
+    .game-card:hover .game-card-cover .play-overlay { opacity: 1; }
     .game-card-body {
-      padding: 0.9rem 1rem 1rem;
+      padding: 0.85rem 1rem 1rem;
     }
     .game-card-body .title {
       font-size: 0.95rem; font-weight: 700;
@@ -274,11 +384,16 @@
     .foot { border-top: 1px solid var(--line); padding: 1.5rem 2rem; text-align: center; color: var(--ink-dim); font-size: 0.75rem; margin-top: 2rem; }
 
     @media (max-width: 768px) {
+      .featured-banner { grid-template-columns: 1fr; padding: 2rem 1rem; }
+      .featured-content h1 { font-size: 2rem; }
+      .featured-visual { display: none; }
       .game-hero { grid-template-columns: 1fr; }
       .game-hero-visual { height: 250px; }
       .hero h1 { font-size: 2.25rem; }
       .card-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
-      .game-card-cover { height: 160px; }
+      .game-card-cover { height: 140px; }
+      .game-card-poster { flex: 0 0 160px; }
+      .poster-cover { height: 220px; }
     }
   </style>
 </head>
